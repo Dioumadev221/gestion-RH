@@ -12,15 +12,16 @@
 
 <div class="grille-departements" id="departements">
   {% for _ in '123' %}
-  <div class="surface carte-departement"><div class="squelette mb-3" style="width: 60%"></div><div class="squelette" style="width: 90%"></div></div>
+  <div class="surface carte-departement"><div class="carte-departement-photo"></div><div class="carte-departement-corps"><div class="squelette mb-3" style="width: 60%"></div><div class="squelette" style="width: 90%"></div></div></div>
   {% endfor %}
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  Promise.all([RH.api('/api/departements/'), RH.api('/api/employes/')])
-    .then(([departements, employes]) => {
+  // L'API des employés est paginée : on demande une grande page pour les avatars des équipes
+  Promise.all([RH.api('/api/departements/'), RH.api('/api/employes/?page_size=100')])
+    .then(([departements, { results: employes }]) => {
       const zone = document.getElementById('departements');
       if (!departements.length) {
         zone.outerHTML = `<div class="surface"><div class="etat-vide"><i class="bi bi-diagram-3"></i>
@@ -30,8 +31,11 @@
       zone.innerHTML = departements.map((d) => {
         const membres = employes.filter((e) => e.departement === d.id);
         const pile = membres.slice(0, 5).map((e) => RH.avatar(e)).join('');
+        const photo = RH.photoDepartement(d.nom);
         return `
           <a class="surface carte-departement" href="/?departement=${d.id}">
+            ${photo ? `<div class="carte-departement-photo"><img src="${photo}" alt="Département ${RH.echapper(d.nom)}" loading="lazy"></div>` : ''}
+            <div class="carte-departement-corps">
             <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
               <h2>${RH.echapper(d.nom)}</h2>
               <span class="small text-muted-rh num text-nowrap">${RH.pluriel(d.nb_employes, 'employé')}</span>
@@ -43,6 +47,7 @@
                 <div class="fw-medium">${d.responsable ? RH.echapper(d.responsable) : '<span class="text-muted-rh fw-normal">Non défini</span>'}</div>
               </div>
               <div class="pile-avatars">${pile}</div>
+            </div>
             </div>
           </a>`;
       }).join('');

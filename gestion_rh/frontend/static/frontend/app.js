@@ -150,6 +150,15 @@ const RH = {
     return `<span class="avatar ${taille} avatar-${somme % 6}" aria-hidden="true">${RH.echapper(RH.initiales(employe))}</span>`;
   },
 
+  // Photo d'un département, retrouvée par son nom (« TIC » -> img/departements/tic.jpg).
+  // Le modèle n'a pas de champ image : on associe les photos côté frontend.
+  PHOTOS_DEPARTEMENTS: ['administration', 'tic', 'automobile'],
+
+  photoDepartement(nom) {
+    const cle = (nom || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    return RH.PHOTOS_DEPARTEMENTS.includes(cle) ? `/static/frontend/img/departements/${cle}.jpg` : null;
+  },
+
   pluriel(nombre, mot) {
     return `${nombre} ${mot}${nombre > 1 ? 's' : ''}`;
   },

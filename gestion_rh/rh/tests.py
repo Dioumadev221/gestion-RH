@@ -47,17 +47,38 @@ class ApiRHTests(APITestCase):
     def test_liste_employes(self):
         rep = self.client.get('/api/employes/')
         self.assertEqual(rep.status_code, 200)
-        self.assertEqual([e['nom'] for e in rep.data], ['Diop', 'Fall'])
-        self.assertEqual(rep.data[0]['departement_nom'], 'Pédagogie')
-        self.assertEqual(rep.data[0]['contrat_actuel']['type_contrat'], 'CDI')
+        employes = rep.data['results']
+        self.assertEqual([e['nom'] for e in employes], ['Diop', 'Fall'])
+        self.assertEqual(employes[0]['departement_nom'], 'Pédagogie')
+        self.assertEqual(employes[0]['contrat_actuel']['type_contrat'], 'CDI')
+
+    def test_pagination(self):
+        for i in range(3, 13):  # 10 employés de plus : 12 au total
+            Employe.objects.create(
+                matricule=f'EMP-{i:03d}', nom=f'Nom{i:02d}', prenom='Test', email=f't{i}@isep-at.sn',
+                telephone=770000000 + i, date_embauche=date(2024, 1, 1), poste='Test', departement=self.finances,
+            )
+        rep = self.client.get('/api/employes/')
+        self.assertEqual((rep.data['count'], rep.data['nb_pages'], rep.data['page']), (12, 3, 1))
+        self.assertEqual(len(rep.data['results']), 5)
+
+        rep = self.client.get('/api/employes/', {'page': 3})
+        self.assertEqual(len(rep.data['results']), 2)
+        self.assertIsNone(rep.data['next'])
+
+        rep = self.client.get('/api/employes/', {'page_size': 10})
+        self.assertEqual((len(rep.data['results']), rep.data['nb_pages']), (10, 2))
+
+        self.assertEqual(self.client.get('/api/employes/', {'page': 99}).status_code, 404)
 
     def test_filtre_par_departement(self):
         rep = self.client.get('/api/employes/', {'departement': self.finances.id})
-        self.assertEqual([e['nom'] for e in rep.data], ['Fall'])
+        self.assertEqual([e['nom'] for e in rep.data['results']], ['Fall'])
+        self.assertEqual(rep.data['count'], 1)
 
     def test_recherche(self):
         rep = self.client.get('/api/employes/', {'search': 'awa'})
-        self.assertEqual([e['matricule'] for e in rep.data], ['EMP-001'])
+        self.assertEqual([e['matricule'] for e in rep.data['results']], ['EMP-001'])
 
     # b) Ajout avec son contrat
     def test_ajout_employe_avec_contrat(self):

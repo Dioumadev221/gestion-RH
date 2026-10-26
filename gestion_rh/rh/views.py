@@ -5,15 +5,35 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .models import Contrat, Departement, Employe
 from .serializers import DepartementSerializer, EmployeSerializer
 
 
+class PaginationEmployes(PageNumberPagination):
+    """?page=2 pour changer de page, ?page_size=10 pour changer la taille (100 maximum)."""
+
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,          # nombre total d'employés (après filtres)
+            'page': self.page.number,                    # page actuelle
+            'nb_pages': self.page.paginator.num_pages,   # nombre de pages
+            'page_size': self.get_page_size(self.request),
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data,                             # les employés de la page
+        })
+
+
 class EmployeViewSet(viewsets.ModelViewSet):
     """
-    GET    /api/employes/                  liste (?departement=<id>, ?search=<texte>)
+    GET    /api/employes/                  liste paginée (?page=, ?page_size=, ?departement=<id>, ?search=<texte>)
     POST   /api/employes/                  ajout (avec ses contrats)
     GET    /api/employes/<id>/             fiche
     PUT    /api/employes/<id>/             modification
@@ -22,6 +42,7 @@ class EmployeViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = EmployeSerializer
+    pagination_class = PaginationEmployes
 
     def get_queryset(self):
         employes = (

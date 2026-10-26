@@ -1,11 +1,12 @@
 {% extends 'frontend/base.html' %}
+{% load static %}
 {% block titre %}Connexion{% endblock %}
 
 {% block page %}
 <div class="page-connexion">
   <aside class="connexion-panneau">
-    <div class="d-flex align-items-center gap-2 fw-semibold">
-      <span class="rh-logo">RH</span> ISEP-AT
+    <div>
+      <span class="tuile-logo"><img src="{% static 'frontend/img/logo-isep.png' %}" alt="ISEP Diamniadio"></span>
     </div>
     <div>
       <div class="citation">
@@ -19,6 +20,7 @@
   <div class="connexion-formulaire">
     <form method="post" novalidate>
       {% csrf_token %}
+      <img src="{% static 'frontend/img/logo-isep.png' %}" alt="ISEP Diamniadio" class="logo-connexion mb-4">
       <h1 class="h4 fw-semibold mb-1" style="letter-spacing: -0.02em">Connexion</h1>
       <p class="text-muted-rh mb-4">Accès réservé aux responsables RH.</p>
 

@@ -16,38 +16,53 @@ def dans(jours):
 
 # nom, description, responsable
 DEPARTEMENTS = [
-    ('Pédagogie', 'Enseignants et coordination des formations', 'Awa Diop'),
-    ('Administration', 'Scolarité, secrétariat et direction', 'Fatou Sow'),
-    ('Finances', 'Comptabilité, paie et budget', 'Aminata Fall'),
-    ('Services techniques', 'Informatique, maintenance et logistique', 'Cheikh Gueye'),
+    ('TIC', "Technologies de l'information et de la communication : développement, réseaux, informatique", 'Awa Diop'),
+    ('Automobile', 'Mécanique et électricité automobile', 'Lamine Sarr'),
+    ('Administration', 'Scolarité, secrétariat, comptabilité et direction', 'Fatou Sow'),
 ]
 
 # matricule, prénom, nom, poste, département, date d'embauche, téléphone, contrat (type, début, fin)
 EMPLOYES = [
-    ('EMP-001', 'Awa', 'Diop', 'Enseignante Python', 'Pédagogie', date(2019, 9, 1), 771234501,
+    ('EMP-001', 'Awa', 'Diop', 'Enseignante Python', 'TIC', date(2019, 9, 1), 771234501,
      ('CDI', date(2019, 9, 1), None)),
-    ('EMP-002', 'Moussa', 'Ba', 'Enseignant Réseaux', 'Pédagogie', date(2022, 10, 1), 781234502,
+    ('EMP-002', 'Moussa', 'Ba', 'Enseignant Réseaux', 'TIC', date(2022, 10, 1), 781234502,
      ('CDD', dans(-340), dans(25))),
     ('EMP-003', 'Fatou', 'Sow', 'Responsable scolarité', 'Administration', date(2018, 1, 15), 761234503,
      ('CDI', date(2018, 1, 15), None)),
     ('EMP-004', 'Ibrahima', 'Ndiaye', 'Secrétaire de direction', 'Administration', date(2023, 3, 1), 771234504,
      ('CDD', dans(-200), dans(165))),
-    ('EMP-005', 'Aminata', 'Fall', 'Comptable', 'Finances', date(2020, 6, 1), 701234505,
+    ('EMP-005', 'Aminata', 'Fall', 'Comptable', 'Administration', date(2020, 6, 1), 701234505,
      ('CDI', date(2020, 6, 1), None)),
-    ('EMP-006', 'Cheikh', 'Gueye', 'Technicien informatique', 'Services techniques', date(2021, 2, 1), 771234506,
+    ('EMP-006', 'Cheikh', 'Gueye', 'Technicien informatique', 'TIC', date(2021, 2, 1), 771234506,
      ('CDI', date(2021, 2, 1), None)),
-    ('EMP-007', 'Mariama', 'Sy', 'Formatrice Bootstrap', 'Pédagogie', date(2025, 1, 6), 781234507,
+    ('EMP-007', 'Mariama', 'Sy', 'Formatrice Bootstrap', 'TIC', date(2025, 1, 6), 781234507,
      ('PRESTATAIRE', dans(-120), dans(48))),
-    ('EMP-008', 'Ousmane', 'Faye', 'Agent de maintenance', 'Services techniques', date(2024, 4, 1), 761234508,
+    ('EMP-008', 'Ousmane', 'Faye', 'Formateur mécanique automobile', 'Automobile', date(2024, 4, 1), 761234508,
      ('CDD', dans(-400), dans(-12))),
+    ('EMP-009', 'Lamine', 'Sarr', 'Formateur électricité automobile', 'Automobile', date(2017, 10, 2), 771234509,
+     ('CDI', date(2017, 10, 2), None)),
 ]
 
 
 class Command(BaseCommand):
     help = 'Crée des départements, employés et contrats de démonstration (sans doublons).'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--reinitialiser',
+            action='store_true',
+            help='Supprime TOUS les départements, employés et contrats avant de recharger la démo.',
+        )
+
     @transaction.atomic
     def handle(self, *args, **options):
+        if options['reinitialiser']:
+            # Contrat.emploi est en PROTECT : les contrats doivent partir en premier
+            Contrat.objects.all().delete()
+            Employe.objects.all().delete()
+            Departement.objects.all().delete()
+            self.stdout.write('Données RH supprimées.')
+
         departements = {}
         for nom, description, responsable in DEPARTEMENTS:
             departements[nom], _ = Departement.objects.get_or_create(

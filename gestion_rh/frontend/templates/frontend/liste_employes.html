@@ -72,17 +72,36 @@
       </tbody>
     </table>
   </div>
-  <div class="px-3 py-2 border-top small text-muted-rh num" id="compteur">&nbsp;</div>
+  <div class="barre-pagination">
+    <div class="small text-muted-rh num" id="compteur" aria-live="polite">&nbsp;</div>
+    <div class="d-flex align-items-center gap-2 small text-muted-rh">
+      <label for="taille-page" class="text-nowrap">Par page</label>
+      <select id="taille-page" class="form-select form-select-sm" style="width: 4.75rem">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="25">25</option>
+      </select>
+    </div>
+  </div>
 </section>
+
+<!-- Pagination façon Google : « ISEP-AT » au-dessus des numéros de page -->
+<nav class="pagination-google" id="pagination" aria-label="Pagination des employés"></nav>
 {% endblock %}
 
 {% block scripts %}
 <script>
   const filtreDepartement = document.getElementById('filtre-departement');
   const champRecherche = document.getElementById('recherche');
+  const choixTaillePage = document.getElementById('taille-page');
   const lignes = document.getElementById('lignes-employes');
+  const pagination = document.getElementById('pagination');
   const parametres = new URLSearchParams(location.search);
+  const TAILLE_PAR_DEFAUT = '5';
+
   champRecherche.value = parametres.get('search') || '';
+  choixTaillePage.value = ['5', '10', '25'].includes(parametres.get('page_size')) ? parametres.get('page_size') : TAILLE_PAR_DEFAUT;
+  let pageActuelle = Math.max(1, Number(parametres.get('page')) || 1);
 
   async function chargerStatistiques() {
     const stats = await RH.api('/api/statistiques/');
@@ -103,22 +122,68 @@
     filtreDepartement.value = parametres.get('departement') || '';
   }
 
-  async function chargerEmployes() {
+  async function chargerEmployes(page = pageActuelle) {
     const filtres = new URLSearchParams();
     if (filtreDepartement.value) filtres.set('departement', filtreDepartement.value);
     if (champRecherche.value.trim()) filtres.set('search', champRecherche.value.trim());
-    history.replaceState(null, '', filtres.toString() ? `?${filtres}` : location.pathname);
+    const filtre = filtres.toString() !== '';
 
+    // L'URL de la page garde les filtres et la pagination (utile pour actualiser ou partager le lien)
+    const adresse = new URLSearchParams(filtres);
+    if (page > 1) adresse.set('page', page);
+    if (choixTaillePage.value !== TAILLE_PAR_DEFAUT) adresse.set('page_size', choixTaillePage.value);
+    history.replaceState(null, '', adresse.toString() ? `?${adresse}` : location.pathname);
+
+    filtres.set('page', page);
+    filtres.set('page_size', choixTaillePage.value);
     try {
-      afficherEmployes(await RH.api(`/api/employes/?${filtres}`), filtres.toString() !== '');
+      const reponse = await RH.api(`/api/employes/?${filtres}`);
+      pageActuelle = reponse.page;
+      afficherEmployes(reponse.results, filtre);
+      afficherPagination(reponse);
     } catch (erreur) {
+      // Page qui n'existe plus (ex. dernier employé de la dernière page supprimé) : on revient en arrière
+      if (erreur.status === 404 && page > 1) return chargerEmployes(page - 1);
       RH.erreurServeur(erreur);
     }
   }
 
-  function afficherEmployes(employes, filtre) {
-    document.getElementById('compteur').textContent = RH.pluriel(employes.length, 'employé');
+  // Comme Google : au plus 10 numéros, et la fenêtre glisse pour garder la page actuelle au milieu
+  const MAX_NUMEROS = 10;
 
+  function fenetreDePages(page, total) {
+    if (total <= MAX_NUMEROS) return { debut: 1, fin: total };
+    const debut = Math.max(1, Math.min(page - 5, total - MAX_NUMEROS + 1));
+    return { debut, fin: debut + MAX_NUMEROS - 1 };
+  }
+
+  function afficherPagination({ count, page, nb_pages: nbPages, page_size: taille }) {
+    const debut = count ? (page - 1) * taille + 1 : 0;
+    const fin = Math.min(page * taille, count);
+    document.getElementById('compteur').textContent = count
+      ? `${debut}–${fin} sur ${RH.pluriel(count, 'employé')}`
+      : '0 employé';
+
+    if (nbPages <= 1) {
+      pagination.innerHTML = '';
+      return;
+    }
+
+    // « ISEP-AT » fixe et centré, les numéros centrés en dessous
+    const fenetre = fenetreDePages(page, nbPages);
+    const numeros = [];
+    for (let n = fenetre.debut; n <= fenetre.fin; n++) {
+      numeros.push(n === page
+        ? `<span class="pg-numero pg-actuel" aria-current="page">${n}</span>`
+        : `<button type="button" class="pg-numero" data-page="${n}" aria-label="Page ${n}">${n}</button>`);
+    }
+
+    pagination.innerHTML = `
+      <div class="pg-marque" aria-hidden="true"><span class="pg-isep">ISEP</span><span class="pg-at">-AT</span></div>
+      <div class="pg-numeros">${numeros.join('')}</div>`;
+  }
+
+  function afficherEmployes(employes, filtre) {
     if (!employes.length) {
       lignes.innerHTML = `<tr><td colspan="6"><div class="etat-vide">
         <i class="bi bi-${filtre ? 'search' : 'people'}"></i>
@@ -170,15 +235,24 @@
     if (ligne) location.href = `/employes/${ligne.dataset.id}/`;
   });
 
+  pagination.addEventListener('click', (evenement) => {
+    const bouton = evenement.target.closest('[data-page]');
+    if (!bouton) return;
+    chargerEmployes(Number(bouton.dataset.page));
+    document.querySelector('.toolbar').scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+
+  // Un nouveau filtre ou une nouvelle taille de page repart de la page 1
   let minuterie;
   champRecherche.addEventListener('input', () => {
     clearTimeout(minuterie);
-    minuterie = setTimeout(chargerEmployes, 250);
+    minuterie = setTimeout(() => chargerEmployes(1), 250);
   });
-  filtreDepartement.addEventListener('change', chargerEmployes);
+  filtreDepartement.addEventListener('change', () => chargerEmployes(1));
+  choixTaillePage.addEventListener('change', () => chargerEmployes(1));
 
   Promise.all([chargerStatistiques(), chargerDepartements()])
-    .then(chargerEmployes)
+    .then(() => chargerEmployes(pageActuelle))
     .catch(RH.erreurServeur);
 </script>
 {% endblock %}

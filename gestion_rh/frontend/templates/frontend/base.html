@@ -18,8 +18,9 @@
 <nav class="navbar navbar-expand-md rh-nav">
   <div class="container-xl">
     <a class="navbar-brand" href="{% url 'frontend:liste_employes' %}">
-      <span class="rh-logo">RH</span>
-      <span>ISEP-AT <span class="fw-normal text-muted-rh d-none d-sm-inline"></span></span>
+      <img src="{% static 'frontend/img/logo-isep.png' %}" alt="ISEP Diamniadio" class="logo-isep">
+      <span class="separateur-marque d-none d-sm-inline" aria-hidden="true"></span>
+      <span class="d-none d-sm-inline">Ressources humaines</span>
     </a>
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#menu"
             aria-controls="menu" aria-expanded="false" aria-label="Ouvrir le menu">

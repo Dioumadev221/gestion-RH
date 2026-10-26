@@ -41,6 +41,9 @@
   --bs-secondary-color: var(--rh-muted);
 }
 
+/* Réserve la place de la barre de défilement : la page ne se décale plus quand sa hauteur change */
+html { scrollbar-gutter: stable; }
+
 body {
   font-feature-settings: 'cv11', 'ss01';
   -webkit-font-smoothing: antialiased;
@@ -69,6 +72,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   display: grid; place-items: center;
   background: var(--rh-primary); color: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em;
 }
+.logo-isep { height: 34px; width: auto; display: block; }
+.separateur-marque { width: 1px; height: 22px; background: var(--rh-border-strong); }
+.logo-connexion { height: 64px; width: auto; display: block; }
+.tuile-logo {
+  display: inline-flex; align-items: center; background: #fff; border-radius: 10px; padding: 8px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+.tuile-logo img { height: 40px; width: auto; display: block; }
 .rh-nav .nav-link {
   color: var(--rh-muted); font-weight: 500; padding: 1.15rem 0.85rem !important;
   border-bottom: 2px solid transparent; margin-bottom: -1px;
@@ -170,6 +181,38 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .toolbar .form-select { flex: 0 1 240px; }
 @media (max-width: 575.98px) { .toolbar .form-select { flex-basis: 100%; } .table-rh .actions { opacity: 1; } }
 
+/* ---------- Pagination ---------- */
+.barre-pagination {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: 0.65rem 1rem; border-top: 1px solid var(--rh-border);
+}
+/* Pagination façon Google : « ISEP-AT » centré, numéros centrés en dessous */
+.pagination-google {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  margin: 2rem auto 0.5rem; text-align: center; user-select: none;
+}
+.pagination-google:empty { display: none; }
+.pg-marque {
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 2rem; line-height: 1;
+  letter-spacing: 0.02em;
+}
+.pg-isep { color: #6b4423; }   /* brun du logo ISEP */
+.pg-at { color: #c99a2e; }     /* or du logo ISEP */
+.pg-numeros { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.15rem; }
+.pg-numero {
+  min-width: 2rem; height: 2rem; padding: 0 0.35rem; border: 0; border-radius: 50%;
+  background: none; font: inherit; font-size: 0.9rem; color: var(--rh-primary); cursor: pointer;
+  font-variant-numeric: tabular-nums; transition: background-color 0.12s;
+}
+.pg-numero:hover { background: var(--rh-primary-subtle); }
+.pg-numero:focus-visible { outline: 2px solid var(--rh-primary); outline-offset: 2px; }
+.pg-actuel {
+  display: inline-grid; place-items: center; color: #fff; background: var(--rh-primary);
+  font-weight: 600; cursor: default;
+}
+.pg-actuel:hover { background: var(--rh-primary); }
+@media (max-width: 575.98px) { .pg-marque { font-size: 1.5rem; } }
+
 /* ---------- Avatars ---------- */
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; flex: none;
@@ -229,9 +272,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- Départements ---------- */
 .grille-departements { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-.carte-departement { display: flex; flex-direction: column; padding: 1.15rem; color: inherit; text-decoration: none; transition: border-color 0.15s; }
-.carte-departement:hover { border-color: var(--rh-primary); color: inherit; }
+.carte-departement { display: flex; flex-direction: column; overflow: hidden; color: inherit; text-decoration: none; transition: border-color 0.15s, box-shadow 0.15s; }
+.carte-departement:hover { border-color: var(--rh-primary); color: inherit; box-shadow: 0 6px 20px rgba(27, 36, 32, 0.08); }
 .carte-departement h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+.carte-departement-corps { display: flex; flex-direction: column; flex: 1; padding: 1.15rem; }
+.carte-departement-photo { aspect-ratio: 16 / 9; background: var(--rh-primary-subtle); overflow: hidden; }
+.carte-departement-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; transition: transform 0.4s ease; }
+.carte-departement:hover .carte-departement-photo img { transform: scale(1.03); }
+@media (prefers-reduced-motion: reduce) { .carte-departement-photo img { transition: none; } }
 
 /* ---------- Chargement / état vide ---------- */
 .squelette { height: 0.8rem; border-radius: 4px; background: linear-gradient(90deg, #eeece6 25%, #f6f5f1 50%, #eeece6 75%); background-size: 200% 100%; animation: chargement 1.2s infinite; }

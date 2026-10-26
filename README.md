@@ -31,7 +31,7 @@ pip install -r requirements.txt
 docker compose up -d
 cd gestion_rh
 python manage.py migrate
-python manage.py seed_rh          # données de démonstration (facultatif)
+python manage.py seed_rh          # données de démo : départements TIC, Automobile, Administration (facultatif)
 python manage.py createsuperuser
 python manage.py runserver 8002
 ```
