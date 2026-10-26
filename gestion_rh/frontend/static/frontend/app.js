@@ -27,7 +27,8 @@ const RH = {
   alerte(message, type = 'success') {
     const icones = { success: 'check-circle', danger: 'exclamation-triangle', warning: 'exclamation-circle', info: 'info-circle' };
     const div = document.createElement('div');
-    div.className = `alert alert-${type} alert-dismissible fade show shadow-sm`;
+    div.className = `alert alert-${type} alert-dismissible fade show`;
+    setTimeout(() => bootstrap.Alert.getOrCreateInstance(div).close(), 6000);
     div.setAttribute('role', 'alert');
     div.innerHTML = `<i class="bi bi-${icones[type] || 'info-circle'} me-2"></i>${RH.echapper(message)}
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>`;
@@ -99,18 +100,58 @@ const RH = {
     return `${jour}/${mois}/${annee}`;
   },
 
-  argent(valeur) {
-    return `${Number(valeur).toLocaleString('fr-FR')} FCFA`;
+  // Seuil (en jours) à partir duquel une fin de contrat est signalée
+  SEUIL_ECHEANCE: 60,
+
+  joursRestants(dateIso) {
+    if (!dateIso) return null;
+    const aujourdHui = new Date();
+    aujourdHui.setHours(0, 0, 0, 0);
+    return Math.round((new Date(`${dateIso}T00:00:00`) - aujourdHui) / 86400000);
   },
 
-  badgeContrat(contrat) {
-    if (!contrat) return '<span class="badge text-bg-light border">Sans contrat</span>';
-    const couleurs = { CDI: 'success', CDD: 'warning', PRESTATAIRE: 'info' };
-    return `<span class="badge text-bg-${couleurs[contrat.type]}">${RH.echapper(contrat.type_display)}</span>`;
+  // Pastille du type de contrat (CDI / CDD / Prestataire)
+  pastilleContrat(contrat) {
+    if (!contrat) return '<span class="pastille pastille-neutre">Sans contrat</span>';
+    const libelles = { CDI: 'CDI', CDD: 'CDD', PRESTATAIRE: 'Prestataire' };
+    return `<span class="pastille pastille-${contrat.type_contrat.toLowerCase()}" title="${RH.echapper(contrat.type_contrat_display)}">
+      ${libelles[contrat.type_contrat] || RH.echapper(contrat.type_contrat)}</span>`;
+  },
+
+  // 771234567 -> « 77 123 45 67 »
+  telephone(numero) {
+    if (numero == null || numero === '') return '—';
+    const chiffres = String(numero);
+    return chiffres.length === 9
+      ? `${chiffres.slice(0, 2)} ${chiffres.slice(2, 5)} ${chiffres.slice(5, 7)} ${chiffres.slice(7)}`
+      : chiffres;
+  },
+
+  // Texte d'échéance sous la pastille : « jusqu'au … », « fin dans 12 j », « expiré »
+  echeance(contrat) {
+    if (!contrat || !contrat.date_fin) return '';
+    const jours = RH.joursRestants(contrat.date_fin);
+    if (jours < 0) return `<div class="echeance depassee"><i class="bi bi-exclamation-circle"></i> Expiré le ${RH.date(contrat.date_fin)}</div>`;
+    if (jours <= RH.SEUIL_ECHEANCE) {
+      return `<div class="echeance proche"><i class="bi bi-clock"></i> Fin dans ${jours} j</div>`;
+    }
+    return `<div class="echeance">Jusqu'au ${RH.date(contrat.date_fin)}</div>`;
   },
 
   initiales(employe) {
     return `${employe.prenom[0] || ''}${employe.nom[0] || ''}`.toUpperCase();
+  },
+
+  // Avatar à initiales, avec une couleur stable par personne
+  avatar(employe, taille = '') {
+    const cle = `${employe.prenom}${employe.nom}`;
+    let somme = 0;
+    for (const lettre of cle) somme += lettre.charCodeAt(0);
+    return `<span class="avatar ${taille} avatar-${somme % 6}" aria-hidden="true">${RH.echapper(RH.initiales(employe))}</span>`;
+  },
+
+  pluriel(nombre, mot) {
+    return `${nombre} ${mot}${nombre > 1 ? 's' : ''}`;
   },
 };
 

@@ -2,46 +2,50 @@
 {% block titre %}Départements{% endblock %}
 
 {% block contenu %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<header class="page-header">
   <div>
-    <h1 class="h3 mb-0">Départements</h1>
-    <p class="text-body-secondary mb-0">Cliquez sur un département pour voir ses employés</p>
+    <h1>Départements</h1>
+    <p class="sous-titre">Organisation de l'institut et responsables</p>
   </div>
-  <a href="{% url 'admin:rh_departement_changelist' %}" class="btn btn-outline-primary"><i class="bi bi-gear me-1"></i>Gérer dans l'administration</a>
-</div>
+  <a href="{% url 'admin:rh_departement_changelist' %}" class="btn btn-light-rh"><i class="bi bi-gear me-1"></i>Gérer les départements</a>
+</header>
 
-<div class="row g-3" id="departements">
-  <div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></div>
+<div class="grille-departements" id="departements">
+  {% for _ in '123' %}
+  <div class="surface carte-departement"><div class="squelette mb-3" style="width: 60%"></div><div class="squelette" style="width: 90%"></div></div>
+  {% endfor %}
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  RH.api('/api/departements/')
-    .then((departements) => {
+  Promise.all([RH.api('/api/departements/'), RH.api('/api/employes/')])
+    .then(([departements, employes]) => {
       const zone = document.getElementById('departements');
       if (!departements.length) {
-        zone.innerHTML = `<div class="col-12"><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>
-          Aucun département. Ajoutez-en depuis l'administration.</div></div>`;
+        zone.outerHTML = `<div class="surface"><div class="etat-vide"><i class="bi bi-diagram-3"></i>
+          Aucun département. <a href="{% url 'admin:rh_departement_add' %}">Créer le premier</a></div></div>`;
         return;
       }
-      zone.innerHTML = departements.map((d) => `
-        <div class="col-md-6 col-lg-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h2 class="h5 mb-0">${RH.echapper(d.nom)}</h2>
-                <span class="badge rounded-pill text-bg-primary">${d.nb_employes} employé${d.nb_employes > 1 ? 's' : ''}</span>
+      zone.innerHTML = departements.map((d) => {
+        const membres = employes.filter((e) => e.departement === d.id);
+        const pile = membres.slice(0, 5).map((e) => RH.avatar(e)).join('');
+        return `
+          <a class="surface carte-departement" href="/?departement=${d.id}">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+              <h2>${RH.echapper(d.nom)}</h2>
+              <span class="small text-muted-rh num text-nowrap">${RH.pluriel(d.nb_employes, 'employé')}</span>
+            </div>
+            <p class="small text-muted-rh mb-3">${RH.echapper(d.description) || 'Pas de description.'}</p>
+            <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
+              <div class="small">
+                <div class="text-muted-rh" style="font-size: 0.72rem">Responsable</div>
+                <div class="fw-medium">${d.responsable ? RH.echapper(d.responsable) : '<span class="text-muted-rh fw-normal">Non défini</span>'}</div>
               </div>
-              <p class="text-body-secondary small">${RH.echapper(d.description) || 'Pas de description.'}</p>
-              <p class="mb-0 small"><i class="bi bi-person-badge me-1"></i>Responsable :
-                ${d.responsable_nom ? `<strong>${RH.echapper(d.responsable_nom)}</strong>` : '<span class="text-body-secondary">non défini</span>'}</p>
+              <div class="pile-avatars">${pile}</div>
             </div>
-            <div class="card-footer bg-body border-0 pt-0 pb-3">
-              <a href="/?departement=${d.id}" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-people me-1"></i>Voir les employés</a>
-            </div>
-          </div>
-        </div>`).join('');
+          </a>`;
+      }).join('');
     })
     .catch(RH.erreurServeur);
 </script>

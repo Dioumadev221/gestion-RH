@@ -42,14 +42,16 @@ Tests : `python manage.py test rh`
 
 ## Modèles
 
+Modèle fourni par le professeur (`rh/models.py`).
+
 | Modèle | Champs |
 |---|---|
-| `Employe` | matricule (unique), nom, prénom, email (unique), téléphone, date d'embauche, poste, département |
-| `Departement` | nom (unique), description, responsable (→ Employe) |
-| `Contrat` | employé (→ Employe), type (CDI / CDD / Prestataire), date début, date fin, salaire |
+| `Departement` | nom (unique), description, responsable (texte) |
+| `Employe` | matricule, nom, prénom, email, téléphone (nombre), date d'embauche, poste, département (→ Departement, `CASCADE`, `related_name='emplois'`) |
+| `Contrat` | référence (unique), type_contrat (CDD / CDI / PRESTATAIRE), date début, date fin, emploi (→ Employe, `PROTECT`, `related_name='contrats'`) |
 
-Relations : un département a plusieurs employés (`ForeignKey`) ; un employé a plusieurs contrats (`ForeignKey`, saisis dans le même formulaire que l'employé) ; un département a un responsable (`ForeignKey` vers Employe).
-Validation : date de fin obligatoire pour un CDD ou un prestataire, et postérieure à la date de début.
+Les contrats sont saisis dans le même formulaire que l'employé. Comme `Contrat.emploi` est en `PROTECT`, la suppression d'un employé supprime d'abord ses contrats.
+Validation (API) : matricule et référence de contrat non dupliqués, date de fin obligatoire pour un CDD ou une prestation et postérieure à la date de début.
 
 ## API (backend)
 
@@ -71,9 +73,9 @@ Exemple de corps pour `POST /api/employes/` :
 ```json
 {
   "matricule": "EMP-009", "nom": "Diallo", "prenom": "Khadija",
-  "email": "khadija.diallo@isep-at.sn", "telephone": "77 555 44 33",
+  "email": "khadija.diallo@isep-at.sn", "telephone": 775554433,
   "date_embauche": "2026-10-01", "poste": "Enseignante Django", "departement": 1,
-  "contrats": [{"type": "CDD", "date_debut": "2026-10-01", "date_fin": "2027-09-30", "salaire": "600000"}]
+  "contrats": [{"reference": "CTR-2026-009", "type_contrat": "CDD", "date_debut": "2026-10-01", "date_fin": "2027-09-30"}]
 }
 ```
 
@@ -81,7 +83,8 @@ Exemple de corps pour `POST /api/employes/` :
 
 | Page | URL |
 |---|---|
-| Liste des employés (stats, filtre par département, recherche) | `/` |
+| Connexion (comptes staff uniquement) | `/connexion/` |
+| Liste des employés (chiffres clés, échéances de contrat, filtre par département, recherche) | `/` |
 | Ajouter un employé | `/employes/ajouter/` |
 | Fiche d'un employé | `/employes/<id>/` |
 | Modifier un employé (formulaire pré-rempli) | `/employes/<id>/modifier/` |

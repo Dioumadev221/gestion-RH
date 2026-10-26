@@ -1,0 +1,44 @@
+{% extends 'frontend/base.html' %}
+{% block titre %}Connexion{% endblock %}
+
+{% block page %}
+<div class="page-connexion">
+  <aside class="connexion-panneau">
+    <div class="d-flex align-items-center gap-2 fw-semibold">
+      <span class="rh-logo">RH</span> ISEP-AT
+    </div>
+    <div>
+      <div class="citation">
+        <p class="surtitre mb-2" style="color: #e9c48a">Espace ressources humaines</p>
+
+      </div>
+      <p class="small mb-0" style="color: #c9dcd3">Institut Supérieur d'Enseignement Professionnel Amadou Trawaré de Diamniadio</p>
+    </div>
+  </aside>
+
+  <div class="connexion-formulaire">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <h1 class="h4 fw-semibold mb-1" style="letter-spacing: -0.02em">Connexion</h1>
+      <p class="text-muted-rh mb-4">Accès réservé aux responsables RH.</p>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 small" role="alert">
+          {% for erreur in form.non_field_errors %}{{ erreur }}{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="mb-3">
+        <label for="{{ form.username.id_for_label }}" class="form-label">Nom d'utilisateur</label>
+        {{ form.username }}
+      </div>
+      <div class="mb-4">
+        <label for="{{ form.password.id_for_label }}" class="form-label">Mot de passe</label>
+        {{ form.password }}
+      </div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button type="submit" class="btn btn-primary w-100 py-2">Se connecter</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

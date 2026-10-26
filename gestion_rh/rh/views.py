@@ -1,4 +1,8 @@
+from datetime import timedelta
+
+from django.db import transaction
 from django.db.models import Count, Q
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -14,13 +18,17 @@ class EmployeViewSet(viewsets.ModelViewSet):
     GET    /api/employes/<id>/             fiche
     PUT    /api/employes/<id>/             modification
     PATCH  /api/employes/<id>/             modification partielle
-    DELETE /api/employes/<id>/             suppression
+    DELETE /api/employes/<id>/             suppression (avec ses contrats)
     """
 
     serializer_class = EmployeSerializer
 
     def get_queryset(self):
-        employes = Employe.objects.select_related('departement').prefetch_related('contrats')
+        employes = (
+            Employe.objects.select_related('departement')
+            .prefetch_related('contrats')
+            .order_by('nom', 'prenom')
+        )
         departement = self.request.query_params.get('departement')
         recherche = self.request.query_params.get('search', '').strip()
         if departement:
@@ -34,21 +42,36 @@ class EmployeViewSet(viewsets.ModelViewSet):
             )
         return employes
 
+    @transaction.atomic
+    def perform_destroy(self, employe):
+        # Contrat.emploi est en PROTECT : on supprime explicitement les contrats d'abord
+        employe.contrats.all().delete()
+        employe.delete()
+
 
 class DepartementViewSet(viewsets.ModelViewSet):
     serializer_class = DepartementSerializer
 
     def get_queryset(self):
-        return Departement.objects.select_related('responsable').annotate(nb_employes=Count('employes'))
+        return Departement.objects.annotate(nb_employes=Count('emplois')).order_by('nom')
+
+
+SEUIL_ECHEANCE_JOURS = 60
 
 
 @api_view(['GET'])
 def statistiques(request):
     """Chiffres clés affichés en haut de la liste des employés."""
+    aujourd_hui = timezone.localdate()
     return Response({
         'employes': Employe.objects.count(),
         'departements': Departement.objects.count(),
-        'cdi': Contrat.objects.filter(type=Contrat.Type.CDI).count(),
-        'cdd': Contrat.objects.filter(type=Contrat.Type.CDD).count(),
-        'prestataires': Contrat.objects.filter(type=Contrat.Type.PRESTATAIRE).count(),
+        'cdi': Contrat.objects.filter(type_contrat='CDI').count(),
+        'cdd': Contrat.objects.filter(type_contrat='CDD').count(),
+        'prestataires': Contrat.objects.filter(type_contrat='PRESTATAIRE').count(),
+        # Contrats qui se terminent dans les 60 prochains jours : à renouveler ou clôturer
+        'echeances': Contrat.objects.filter(
+            date_fin__gte=aujourd_hui, date_fin__lte=aujourd_hui + timedelta(days=SEUIL_ECHEANCE_JOURS)
+        ).count(),
+        'seuil_echeance': SEUIL_ECHEANCE_JOURS,
     })

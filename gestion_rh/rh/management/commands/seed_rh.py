@@ -1,43 +1,46 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.utils import timezone
 
 from rh.models import Contrat, Departement, Employe
 
+AUJOURD_HUI = timezone.localdate()
+
+
+def dans(jours):
+    """Date relative à aujourd'hui : les échéances de démo restent réalistes quel que soit le jour."""
+    return AUJOURD_HUI + timedelta(days=jours)
+
+
+# nom, description, responsable
 DEPARTEMENTS = [
-    ('Pédagogie', 'Enseignants et coordination des formations'),
-    ('Administration', 'Scolarité, secrétariat et direction'),
-    ('Finances', 'Comptabilité, paie et budget'),
-    ('Services techniques', 'Informatique, maintenance et logistique'),
+    ('Pédagogie', 'Enseignants et coordination des formations', 'Awa Diop'),
+    ('Administration', 'Scolarité, secrétariat et direction', 'Fatou Sow'),
+    ('Finances', 'Comptabilité, paie et budget', 'Aminata Fall'),
+    ('Services techniques', 'Informatique, maintenance et logistique', 'Cheikh Gueye'),
 ]
 
-# matricule, prénom, nom, poste, département, date d'embauche, contrat (type, début, fin, salaire)
+# matricule, prénom, nom, poste, département, date d'embauche, téléphone, contrat (type, début, fin)
 EMPLOYES = [
-    ('EMP-001', 'Awa', 'Diop', 'Enseignante Python', 'Pédagogie', date(2019, 9, 1),
-     ('CDI', date(2019, 9, 1), None, 850000)),
-    ('EMP-002', 'Moussa', 'Ba', 'Enseignant Réseaux', 'Pédagogie', date(2022, 10, 1),
-     ('CDD', date(2024, 10, 1), date(2026, 9, 30), 650000)),
-    ('EMP-003', 'Fatou', 'Sow', 'Responsable scolarité', 'Administration', date(2018, 1, 15),
-     ('CDI', date(2018, 1, 15), None, 700000)),
-    ('EMP-004', 'Ibrahima', 'Ndiaye', 'Secrétaire de direction', 'Administration', date(2023, 3, 1),
-     ('CDD', date(2023, 3, 1), date(2026, 2, 28), 400000)),
-    ('EMP-005', 'Aminata', 'Fall', 'Comptable', 'Finances', date(2020, 6, 1),
-     ('CDI', date(2020, 6, 1), None, 750000)),
-    ('EMP-006', 'Cheikh', 'Gueye', 'Technicien informatique', 'Services techniques', date(2021, 2, 1),
-     ('CDI', date(2021, 2, 1), None, 550000)),
-    ('EMP-007', 'Mariama', 'Sy', 'Formatrice Bootstrap', 'Pédagogie', date(2025, 1, 6),
-     ('PRESTATAIRE', date(2025, 1, 6), date(2026, 7, 31), 500000)),
-    ('EMP-008', 'Ousmane', 'Faye', 'Agent de maintenance', 'Services techniques', date(2024, 4, 1),
-     ('CDD', date(2024, 4, 1), date(2026, 3, 31), 250000)),
+    ('EMP-001', 'Awa', 'Diop', 'Enseignante Python', 'Pédagogie', date(2019, 9, 1), 771234501,
+     ('CDI', date(2019, 9, 1), None)),
+    ('EMP-002', 'Moussa', 'Ba', 'Enseignant Réseaux', 'Pédagogie', date(2022, 10, 1), 781234502,
+     ('CDD', dans(-340), dans(25))),
+    ('EMP-003', 'Fatou', 'Sow', 'Responsable scolarité', 'Administration', date(2018, 1, 15), 761234503,
+     ('CDI', date(2018, 1, 15), None)),
+    ('EMP-004', 'Ibrahima', 'Ndiaye', 'Secrétaire de direction', 'Administration', date(2023, 3, 1), 771234504,
+     ('CDD', dans(-200), dans(165))),
+    ('EMP-005', 'Aminata', 'Fall', 'Comptable', 'Finances', date(2020, 6, 1), 701234505,
+     ('CDI', date(2020, 6, 1), None)),
+    ('EMP-006', 'Cheikh', 'Gueye', 'Technicien informatique', 'Services techniques', date(2021, 2, 1), 771234506,
+     ('CDI', date(2021, 2, 1), None)),
+    ('EMP-007', 'Mariama', 'Sy', 'Formatrice Bootstrap', 'Pédagogie', date(2025, 1, 6), 781234507,
+     ('PRESTATAIRE', dans(-120), dans(48))),
+    ('EMP-008', 'Ousmane', 'Faye', 'Agent de maintenance', 'Services techniques', date(2024, 4, 1), 761234508,
+     ('CDD', dans(-400), dans(-12))),
 ]
-
-RESPONSABLES = {
-    'Pédagogie': 'EMP-001',
-    'Administration': 'EMP-003',
-    'Finances': 'EMP-005',
-    'Services techniques': 'EMP-006',
-}
 
 
 class Command(BaseCommand):
@@ -46,32 +49,31 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         departements = {}
-        for nom, description in DEPARTEMENTS:
-            departements[nom], _ = Departement.objects.get_or_create(nom=nom, defaults={'description': description})
+        for nom, description, responsable in DEPARTEMENTS:
+            departements[nom], _ = Departement.objects.get_or_create(
+                nom=nom, defaults={'description': description, 'responsable': responsable}
+            )
 
         crees = 0
-        for matricule, prenom, nom, poste, departement, embauche, (type_c, debut, fin, salaire) in EMPLOYES:
-            employe, cree = Employe.objects.get_or_create(
+        for numero, (matricule, prenom, nom, poste, departement, embauche, telephone, contrat) in enumerate(EMPLOYES, 1):
+            if Employe.objects.filter(matricule=matricule).exists():
+                continue
+            employe = Employe.objects.create(
                 matricule=matricule,
-                defaults={
-                    'prenom': prenom,
-                    'nom': nom,
-                    'email': f'{prenom}.{nom}@isep-at.sn'.lower(),
-                    'telephone': f'77 000 00 {matricule[-2:]}',
-                    'date_embauche': embauche,
-                    'poste': poste,
-                    'departement': departements[departement],
-                },
+                prenom=prenom,
+                nom=nom,
+                email=f'{prenom}.{nom}@isep-at.sn'.lower(),
+                telephone=telephone,
+                date_embauche=embauche,
+                poste=poste,
+                departement=departements[departement],
             )
-            if cree:
-                crees += 1
-                Contrat.objects.create(employe=employe, type=type_c, date_debut=debut, date_fin=fin, salaire=salaire)
-
-        for departement, matricule in RESPONSABLES.items():
-            dep = departements[departement]
-            if dep.responsable_id is None:
-                dep.responsable = Employe.objects.get(matricule=matricule)
-                dep.save()
+            type_contrat, debut, fin = contrat
+            Contrat.objects.get_or_create(
+                reference=f'CTR-{debut.year}-{numero:03d}',
+                defaults={'emploi': employe, 'type_contrat': type_contrat, 'date_debut': debut, 'date_fin': fin},
+            )
+            crees += 1
 
         self.stdout.write(self.style.SUCCESS(
             f'{len(departements)} départements, {crees} employé(s) créé(s) ({Employe.objects.count()} au total).'

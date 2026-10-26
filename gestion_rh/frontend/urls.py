@@ -1,3 +1,4 @@
+from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import views
@@ -5,6 +6,8 @@ from . import views
 app_name = 'frontend'
 
 urlpatterns = [
+    path('connexion/', views.ConnexionView.as_view(), name='connexion'),
+    path('deconnexion/', auth_views.LogoutView.as_view(next_page='frontend:connexion'), name='deconnexion'),
     path('', views.liste_employes, name='liste_employes'),
     path('employes/ajouter/', views.ajouter_employe, name='ajouter_employe'),
     path('employes/<int:pk>/', views.detail_employe, name='detail_employe'),

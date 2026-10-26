@@ -129,8 +129,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# Les pages RH sont réservées aux comptes staff : on réutilise la connexion de l'admin
-LOGIN_URL = 'admin:login'
+# Les pages RH sont réservées aux comptes staff, avec leur propre page de connexion
+LOGIN_URL = 'frontend:connexion'
+LOGIN_REDIRECT_URL = 'frontend:liste_employes'
 
 
 # API REST : le frontend est servi par Django, il s'authentifie donc par la session

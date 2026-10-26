@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Illustration du campus de l'ISEP-AT à Diamniadio au coucher du soleil">
+  <defs>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#173f33"/>
+      <stop offset="0.45" stop-color="#2c6b56"/>
+      <stop offset="0.75" stop-color="#c98f3e"/>
+      <stop offset="1" stop-color="#e9c48a"/>
+    </linearGradient>
+    <linearGradient id="facade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4efe4"/>
+      <stop offset="1" stop-color="#ddd3bf"/>
+    </linearGradient>
+    <linearGradient id="facadeOmbre" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d8cdb6"/>
+      <stop offset="1" stop-color="#bfb196"/>
+    </linearGradient>
+    <linearGradient id="vitre" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f6f5a"/>
+      <stop offset="1" stop-color="#1c4a3b"/>
+    </linearGradient>
+    <linearGradient id="vitreLumiere" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3c97a"/>
+      <stop offset="1" stop-color="#e2a948"/>
+    </linearGradient>
+    <linearGradient id="sol" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98e55"/>
+      <stop offset="1" stop-color="#8c6a3c"/>
+    </linearGradient>
+    <linearGradient id="voile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.45" stop-color="#0f2d24" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0f2d24" stop-opacity="0.92"/>
+    </linearGradient>
+    <pattern id="fenetres" width="44" height="46" patternUnits="userSpaceOnUse">
+      <rect x="6" y="8" width="32" height="30" rx="2" fill="url(#vitre)"/>
+      <rect x="6" y="8" width="32" height="4" fill="#ffffff" opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <!-- Ciel et soleil -->
+  <rect width="800" height="1000" fill="url(#ciel)"/>
+  <circle cx="560" cy="520" r="120" fill="#f6d79a" opacity="0.35"/>
+  <circle cx="560" cy="520" r="74" fill="#f9e2b0" opacity="0.9"/>
+
+  <!-- Nuages fins -->
+  <g fill="#ffffff" opacity="0.10">
+    <rect x="80" y="210" width="260" height="10" rx="5"/>
+    <rect x="140" y="232" width="180" height="8" rx="4"/>
+    <rect x="470" y="300" width="230" height="9" rx="4.5"/>
+  </g>
+
+  <!-- Bâtiments en arrière-plan (ville nouvelle) -->
+  <g fill="#1f4f40" opacity="0.55">
+    <rect x="0" y="560" width="90" height="200"/>
+    <rect x="90" y="600" width="60" height="160"/>
+    <rect x="690" y="540" width="110" height="220"/>
+    <rect x="640" y="590" width="60" height="170"/>
+  </g>
+
+  <!-- Bâtiment principal : aile gauche -->
+  <rect x="70" y="620" width="230" height="200" fill="url(#facadeOmbre)"/>
+  <rect x="88" y="640" width="194" height="160" fill="url(#fenetres)"/>
+  <rect x="70" y="612" width="230" height="12" fill="#c9bb9e"/>
+
+  <!-- Bâtiment principal : bloc central -->
+  <rect x="250" y="540" width="330" height="280" fill="url(#facade)"/>
+  <rect x="250" y="528" width="330" height="16" fill="#1f5f4a"/>
+  <!-- brise-soleil verticaux -->
+  <g fill="#cbbd9f">
+    <rect x="270" y="560" width="8" height="190"/>
+    <rect x="318" y="560" width="8" height="190"/>
+    <rect x="366" y="560" width="8" height="190"/>
+    <rect x="456" y="560" width="8" height="190"/>
+    <rect x="504" y="560" width="8" height="190"/>
+    <rect x="552" y="560" width="8" height="190"/>
+  </g>
+  <g fill="url(#vitre)">
+    <rect x="280" y="566" width="36" height="52"/><rect x="328" y="566" width="36" height="52"/>
+    <rect x="466" y="566" width="36" height="52"/><rect x="514" y="566" width="36" height="52"/>
+    <rect x="280" y="632" width="36" height="52"/><rect x="514" y="632" width="36" height="52"/>
+    <rect x="280" y="698" width="36" height="52"/><rect x="328" y="698" width="36" height="52"/>
+    <rect x="466" y="698" width="36" height="52"/><rect x="514" y="698" width="36" height="52"/>
+  </g>
+  <!-- fenêtres éclairées -->
+  <g fill="url(#vitreLumiere)">
+    <rect x="328" y="632" width="36" height="52"/>
+    <rect x="466" y="632" width="36" height="52"/>
+  </g>
+  <!-- hall d'entrée vitré -->
+  <rect x="380" y="566" width="70" height="254" fill="url(#vitre)"/>
+  <g stroke="#f4efe4" stroke-width="2" opacity="0.5">
+    <line x1="403" y1="566" x2="403" y2="820"/>
+    <line x1="427" y1="566" x2="427" y2="820"/>
+    <line x1="380" y1="650" x2="450" y2="650"/>
+    <line x1="380" y1="735" x2="450" y2="735"/>
+  </g>
+  <rect x="392" y="760" width="46" height="60" fill="url(#vitreLumiere)" opacity="0.85"/>
+  <!-- auvent -->
+  <path d="M352 752 L478 752 L466 766 L364 766 Z" fill="#1f5f4a"/>
+  <!-- enseigne -->
+  <rect x="340" y="506" width="150" height="22" rx="3" fill="#173f33"/>
+  <text x="415" y="522" text-anchor="middle" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3" fill="#f4efe4">ISEP-AT</text>
+
+  <!-- Bâtiment principal : aile droite -->
+  <rect x="580" y="640" width="150" height="180" fill="url(#facadeOmbre)"/>
+  <rect x="596" y="656" width="118" height="140" fill="url(#fenetres)"/>
+  <rect x="580" y="632" width="150" height="12" fill="#c9bb9e"/>
+
+  <!-- Sol, parvis -->
+  <rect x="0" y="815" width="800" height="185" fill="url(#sol)"/>
+  <path d="M330 815 L500 815 L640 1000 L190 1000 Z" fill="#cfa96e" opacity="0.55"/>
+  <rect x="0" y="812" width="800" height="6" fill="#7d5d33" opacity="0.5"/>
+
+  <!-- Baobab -->
+  <g fill="#14372c">
+    <path d="M120 815 C126 760 128 720 118 690 L150 690 C142 720 146 760 156 815 Z"/>
+    <path d="M118 700 C100 670 76 660 50 662 C76 650 102 660 122 684 Z"/>
+    <path d="M150 696 C170 664 196 650 226 652 C198 642 168 652 146 684 Z"/>
+    <path d="M132 694 C130 664 122 640 104 622 C126 632 140 656 142 690 Z"/>
+    <path d="M140 692 C150 660 166 636 190 624 C170 640 156 664 150 694 Z"/>
+    <ellipse cx="54" cy="656" rx="30" ry="12"/>
+    <ellipse cx="104" cy="616" rx="26" ry="11"/>
+    <ellipse cx="192" cy="618" rx="28" ry="12"/>
+    <ellipse cx="228" cy="648" rx="30" ry="12"/>
+  </g>
+
+  <!-- Petits arbres et silhouettes -->
+  <g fill="#1a4537">
+    <circle cx="700" cy="780" r="26"/><rect x="697" y="790" width="6" height="28"/>
+    <circle cx="752" cy="790" r="18"/><rect x="749" y="798" width="5" height="20"/>
+  </g>
+  <g fill="#173f33" opacity="0.85">
+    <circle cx="300" cy="842" r="6"/><rect x="295" y="849" width="10" height="26" rx="4"/>
+    <circle cx="318" cy="846" r="5.5"/><rect x="313.5" y="852" width="9" height="23" rx="4"/>
+    <circle cx="560" cy="860" r="6"/><rect x="555" y="867" width="10" height="27" rx="4"/>
+  </g>
+
+  <!-- Voile sombre en bas pour la lisibilité du texte -->
+  <rect width="800" height="1000" fill="url(#voile)"/>
+</svg>

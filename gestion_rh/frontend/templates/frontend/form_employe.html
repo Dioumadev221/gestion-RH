@@ -1,115 +1,134 @@
 {% extends 'frontend/base.html' %}
-{% block titre %}{% if employe_id %}Modifier un employé{% else %}Ajouter un employé{% endif %}{% endblock %}
+{% block titre %}{% if employe_id %}Modifier un employé{% else %}Nouvel employé{% endif %}{% endblock %}
 
 {% block contenu %}
 <nav aria-label="Fil d'Ariane">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{% url 'frontend:liste_employes' %}">Employés</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{% if employe_id %}Modifier{% else %}Ajouter{% endif %}</li>
+    {% if employe_id %}<li class="breadcrumb-item"><a href="{% url 'frontend:detail_employe' employe_id %}" id="fil-nom">Fiche</a></li>{% endif %}
+    <li class="breadcrumb-item active" aria-current="page">{% if employe_id %}Modifier{% else %}Nouvel employé{% endif %}</li>
   </ol>
 </nav>
 
-<h1 class="h3 mb-4" id="titre-page">{% if employe_id %}Modifier un employé{% else %}Ajouter un employé{% endif %}</h1>
+<header class="page-header">
+  <h1 id="titre-page">{% if employe_id %}Modifier l'employé{% else %}Nouvel employé{% endif %}</h1>
+</header>
 
-<form id="formulaire" novalidate>
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-body py-3"><h2 class="h5 mb-0"><i class="bi bi-person-vcard me-2"></i>Informations de l'employé</h2></div>
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label for="matricule" class="form-label">Matricule <span class="text-danger">*</span></label>
-          <input id="matricule" name="matricule" class="form-control" required maxlength="20" placeholder="EMP-001">
-          <div class="invalid-feedback">Le matricule est obligatoire.</div>
-        </div>
-        <div class="col-md-4">
-          <label for="nom" class="form-label">Nom <span class="text-danger">*</span></label>
-          <input id="nom" name="nom" class="form-control" required maxlength="100">
-          <div class="invalid-feedback">Le nom est obligatoire.</div>
-        </div>
-        <div class="col-md-4">
-          <label for="prenom" class="form-label">Prénom <span class="text-danger">*</span></label>
-          <input id="prenom" name="prenom" class="form-control" required maxlength="100">
-          <div class="invalid-feedback">Le prénom est obligatoire.</div>
-        </div>
-        <div class="col-md-6">
-          <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-          <input id="email" name="email" type="email" class="form-control" required placeholder="prenom.nom@isep-at.sn">
-          <div class="invalid-feedback">Saisissez un email valide.</div>
-        </div>
-        <div class="col-md-6">
-          <label for="telephone" class="form-label">Téléphone <span class="text-danger">*</span></label>
-          <input id="telephone" name="telephone" class="form-control" required pattern="\+?[0-9 ]{7,20}" placeholder="77 123 45 67">
-          <div class="invalid-feedback">Saisissez un numéro valide (chiffres et espaces).</div>
-        </div>
-        <div class="col-md-4">
-          <label for="date_embauche" class="form-label">Date d'embauche <span class="text-danger">*</span></label>
-          <input id="date_embauche" name="date_embauche" type="date" class="form-control" required>
-          <div class="invalid-feedback">La date d'embauche est obligatoire.</div>
-        </div>
-        <div class="col-md-4">
-          <label for="poste" class="form-label">Poste <span class="text-danger">*</span></label>
-          <input id="poste" name="poste" class="form-control" required maxlength="100" placeholder="Enseignant, comptable…">
-          <div class="invalid-feedback">Le poste est obligatoire.</div>
-        </div>
-        <div class="col-md-4">
-          <label for="departement" class="form-label">Département</label>
-          <select id="departement" name="departement" class="form-select">
-            <option value="">— Aucun —</option>
-          </select>
-          <div class="invalid-feedback"></div>
-        </div>
+<form id="formulaire" class="surface surface-body px-lg-4 py-lg-4" novalidate>
+  <section class="form-section">
+    <div class="form-section-titre">
+      <h2>Identité</h2>
+      <p>Matricule et coordonnées utilisées pour contacter l'employé.</p>
+    </div>
+    <div class="row g-3">
+      <div class="col-sm-4">
+        <label for="matricule" class="form-label requis">Matricule</label>
+        <input id="matricule" name="matricule" class="form-control mono" required maxlength="20" placeholder="EMP-010">
+        <div class="invalid-feedback">Le matricule est obligatoire.</div>
+      </div>
+      <div class="col-sm-4">
+        <label for="prenom" class="form-label requis">Prénom</label>
+        <input id="prenom" name="prenom" class="form-control" required maxlength="100" autocomplete="off">
+        <div class="invalid-feedback">Le prénom est obligatoire.</div>
+      </div>
+      <div class="col-sm-4">
+        <label for="nom" class="form-label requis">Nom</label>
+        <input id="nom" name="nom" class="form-control" required maxlength="100" autocomplete="off">
+        <div class="invalid-feedback">Le nom est obligatoire.</div>
+      </div>
+      <div class="col-sm-7">
+        <label for="email" class="form-label requis">Email</label>
+        <input id="email" name="email" type="email" class="form-control" required placeholder="prenom.nom@isep-at.sn" autocomplete="off">
+        <div class="invalid-feedback">Saisissez un email valide.</div>
+      </div>
+      <div class="col-sm-5">
+        <label for="telephone" class="form-label requis">Téléphone</label>
+        <input id="telephone" name="telephone" type="tel" inputmode="numeric" class="form-control num" required
+               pattern="[0-9 ]{9,13}" placeholder="77 123 45 67">
+        <div class="invalid-feedback">Saisissez un numéro à 9 chiffres (ex. 77 123 45 67).</div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-body d-flex justify-content-between align-items-center py-3">
-      <h2 class="h5 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrats</h2>
-      <button type="button" id="ajouter-contrat" class="btn btn-sm btn-outline-primary"><i class="bi bi-plus-lg me-1"></i>Ajouter un contrat</button>
+  <section class="form-section">
+    <div class="form-section-titre">
+      <h2>Poste</h2>
+      <p>Fonction occupée et rattachement dans l'organisation.</p>
     </div>
-    <div class="card-body">
+    <div class="row g-3">
+      <div class="col-sm-6">
+        <label for="poste" class="form-label requis">Poste</label>
+        <input id="poste" name="poste" class="form-control" required maxlength="100" placeholder="Enseignant, comptable…">
+        <div class="invalid-feedback">Le poste est obligatoire.</div>
+      </div>
+      <div class="col-sm-6">
+        <label for="departement" class="form-label requis">Département</label>
+        <select id="departement" name="departement" class="form-select" required>
+          <option value="">Choisir un département</option>
+        </select>
+        <div class="invalid-feedback">Le département est obligatoire.</div>
+      </div>
+      <div class="col-sm-6">
+        <label for="date_embauche" class="form-label requis">Date d'embauche</label>
+        <input id="date_embauche" name="date_embauche" type="date" class="form-control" required>
+        <div class="invalid-feedback">La date d'embauche est obligatoire.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section">
+    <div class="form-section-titre">
+      <h2>Contrats</h2>
+      <p>Chaque contrat a une référence unique. La date de fin est obligatoire pour un CDD ou une prestation.</p>
+    </div>
+    <div>
       <div id="contrats"></div>
-      <p id="aucun-contrat" class="text-body-secondary mb-0" hidden>Aucun contrat. Cliquez sur « Ajouter un contrat ».</p>
+      <p id="aucun-contrat" class="text-muted-rh small mb-3" hidden>Aucun contrat pour cet employé.</p>
+      <button type="button" id="ajouter-contrat" class="btn btn-light-rh btn-sm mt-3"><i class="bi bi-plus-lg me-1"></i>Ajouter un contrat</button>
     </div>
-  </div>
-
-  <div class="d-flex gap-2 justify-content-end">
-    <a href="{% if employe_id %}{% url 'frontend:detail_employe' employe_id %}{% else %}{% url 'frontend:liste_employes' %}{% endif %}" class="btn btn-outline-secondary">Annuler</a>
-    <button type="submit" class="btn btn-primary" id="bouton-enregistrer"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
-  </div>
+  </section>
 </form>
 
+<div class="barre-actions">
+  <div class="d-flex justify-content-end gap-2">
+    <a href="{% if employe_id %}{% url 'frontend:detail_employe' employe_id %}{% else %}{% url 'frontend:liste_employes' %}{% endif %}" class="btn btn-light-rh">Annuler</a>
+    <button type="submit" form="formulaire" class="btn btn-primary" id="bouton-enregistrer">
+      <span class="spinner-border spinner-border-sm me-1 d-none" aria-hidden="true"></span>Enregistrer
+    </button>
+  </div>
+</div>
+
 <template id="modele-contrat">
-  <div class="contrat border rounded p-3 mb-3 bg-body-tertiary">
+  <div class="contrat contrat-ligne">
     <input type="hidden" name="id">
-    <div class="row g-3 align-items-start">
-      <div class="col-md-3">
+    <div class="row g-3">
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label requis">Référence</label>
+        <input name="reference" class="form-control mono" required maxlength="50" placeholder="CTR-2026-001">
+        <div class="invalid-feedback">La référence est obligatoire.</div>
+      </div>
+      <div class="col-sm-6 col-lg-3">
         <label class="form-label">Type</label>
-        <select name="type" class="form-select" required>
-          <option value="CDI">CDI</option>
-          <option value="CDD">CDD</option>
-          <option value="PRESTATAIRE">Prestataire</option>
+        <select name="type_contrat" class="form-select" required>
+          <option value="CDI">CDI – Durée indéterminée</option>
+          <option value="CDD">CDD – Durée déterminée</option>
+          <option value="PRESTATAIRE">Prestation de services</option>
         </select>
         <div class="invalid-feedback"></div>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Date de début</label>
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label requis">Début</label>
         <input name="date_debut" type="date" class="form-control" required>
         <div class="invalid-feedback">La date de début est obligatoire.</div>
       </div>
-      <div class="col-md-3">
-        <label class="form-label">Date de fin</label>
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label">Fin</label>
         <input name="date_fin" type="date" class="form-control">
-        <div class="invalid-feedback">Obligatoire pour un CDD ou un prestataire.</div>
+        <div class="invalid-feedback">Obligatoire pour un CDD ou une prestation.</div>
       </div>
-      <div class="col-md-2">
-        <label class="form-label">Salaire (FCFA)</label>
-        <input name="salaire" type="number" min="0" step="1000" class="form-control" required>
-        <div class="invalid-feedback">Saisissez un salaire positif.</div>
-      </div>
-      <div class="col-md-1 d-flex align-items-end" style="min-height: 70px">
-        <button type="button" class="btn btn-outline-danger w-100 retirer-contrat" title="Retirer ce contrat"><i class="bi bi-x-lg"></i></button>
-      </div>
+    </div>
+    <div class="text-end mt-2">
+      <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 retirer-contrat">Retirer ce contrat</button>
     </div>
   </div>
 </template>
@@ -128,15 +147,19 @@
 
   // La date de fin devient obligatoire pour un CDD ou un prestataire
   function majDateFin(bloc) {
-    bloc.querySelector('[name="date_fin"]').required = bloc.querySelector('[name="type"]').value !== 'CDI';
+    const dateFin = bloc.querySelector('[name="date_fin"]');
+    dateFin.required = bloc.querySelector('[name="type_contrat"]').value !== 'CDI';
+    dateFin.previousElementSibling.classList.toggle('requis', dateFin.required);
   }
+
+  const CHAMPS_CONTRAT = ['id', 'reference', 'type_contrat', 'date_debut', 'date_fin'];
 
   function ajouterContrat(contrat = {}) {
     const bloc = document.getElementById('modele-contrat').content.firstElementChild.cloneNode(true);
-    for (const champ of ['id', 'type', 'date_debut', 'date_fin', 'salaire']) {
+    for (const champ of CHAMPS_CONTRAT) {
       if (contrat[champ] != null) bloc.querySelector(`[name="${champ}"]`).value = contrat[champ];
     }
-    bloc.querySelector('[name="type"]').addEventListener('change', () => majDateFin(bloc));
+    bloc.querySelector('[name="type_contrat"]').addEventListener('change', () => majDateFin(bloc));
     bloc.querySelector('.retirer-contrat').addEventListener('click', () => {
       bloc.remove();
       majMessageAucunContrat();
@@ -153,7 +176,7 @@
   function marquerErreur(champ, messages) {
     if (!champ) return;
     champ.classList.add('is-invalid');
-    const retour = champ.parentElement.querySelector('.invalid-feedback');
+    const retour = champ.closest('[class*="col-"]').querySelector('.invalid-feedback');
     if (retour) retour.textContent = [].concat(messages).join(' ');
   }
 
@@ -174,19 +197,23 @@
         RH.alerte([].concat(messages).join(' '), 'danger');
       }
     }
+    formulaire.querySelector('.is-invalid')?.focus();
   }
 
   function lireFormulaire() {
     const donnees = {};
     for (const champ of champsEmploye) donnees[champ] = document.getElementById(champ).value.trim();
     donnees.departement = donnees.departement ? Number(donnees.departement) : null;
+    // Le modèle stocke le téléphone comme un nombre : on retire les espaces
+    const chiffres = donnees.telephone.replace(/\D/g, '');
+    donnees.telephone = chiffres ? Number(chiffres) : null;
     donnees.contrats = [...zoneContrats.querySelectorAll('.contrat')].map((bloc) => {
       const valeur = (nom) => bloc.querySelector(`[name="${nom}"]`).value;
       const contrat = {
-        type: valeur('type'),
+        reference: valeur('reference').trim(),
+        type_contrat: valeur('type_contrat'),
         date_debut: valeur('date_debut'),
         date_fin: valeur('date_fin') || null,
-        salaire: valeur('salaire'),
       };
       if (valeur('id')) contrat.id = Number(valeur('id'));
       return contrat;
@@ -199,13 +226,16 @@
     effacerErreurs();
     formulaire.classList.add('was-validated');
     if (!formulaire.checkValidity()) {
-      RH.alerte('Certains champs sont incomplets ou invalides.', 'warning');
+      formulaire.querySelector(':invalid')?.focus();
+      RH.alerte('Certains champs sont incomplets.', 'warning');
       return;
     }
     formulaire.classList.remove('was-validated');
 
     const bouton = document.getElementById('bouton-enregistrer');
+    const indicateur = bouton.querySelector('.spinner-border');
     bouton.disabled = true;
+    indicateur.classList.remove('d-none');
     try {
       const donnees = lireFormulaire();
       const employe = employeId
@@ -218,12 +248,12 @@
     } catch (erreur) {
       if (erreur.status === 400) {
         afficherErreursApi(erreur.data);
-        RH.alerte('Le formulaire contient des erreurs : corrigez les champs en rouge.', 'danger');
+        RH.alerte('Corrigez les champs signalés en rouge.', 'danger');
       } else {
         RH.erreurServeur(erreur);
       }
-    } finally {
       bouton.disabled = false;
+      indicateur.classList.add('d-none');
     }
   });
 
@@ -241,8 +271,11 @@
 
     // Modification : formulaire pré-rempli avec les données existantes
     const employe = await RH.api(`/api/employes/${employeId}/`);
-    document.getElementById('titre-page').textContent = `Modifier ${employe.prenom} ${employe.nom}`;
+    const nomComplet = `${employe.prenom} ${employe.nom}`;
+    document.getElementById('titre-page').textContent = `Modifier ${nomComplet}`;
+    document.getElementById('fil-nom').textContent = nomComplet;
     for (const champ of champsEmploye) document.getElementById(champ).value = employe[champ] ?? '';
+    document.getElementById('telephone').value = employe.telephone ? RH.telephone(employe.telephone) : '';
     employe.contrats.forEach(ajouterContrat);
     majMessageAucunContrat();
   }

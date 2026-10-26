@@ -13,19 +13,36 @@ class ContratInline(admin.TabularInline):
 @admin.register(Employe)
 class EmployeAdmin(admin.ModelAdmin):
     list_display = ['matricule', 'nom', 'prenom', 'poste', 'departement', 'date_embauche']
-    list_filter = ['departement', 'contrats__type']
+    list_filter = ['departement', 'contrats__type_contrat']
     search_fields = ['matricule', 'nom', 'prenom', 'email', 'poste']
     inlines = [ContratInline]
+
+    def delete_model(self, request, obj):
+        # Contrat.emploi est en PROTECT : suppression des contrats avant l'employé
+        obj.contrats.all().delete()
+        obj.delete()
+
+    def delete_queryset(self, request, queryset):
+        Contrat.objects.filter(emploi__in=queryset).delete()
+        queryset.delete()
+
+
+class EmployeInline(admin.TabularInline):
+    model = Employe
+    extra = 0
+    fields = ['matricule', 'nom', 'prenom', 'poste']
+    show_change_link = True
 
 
 @admin.register(Departement)
 class DepartementAdmin(admin.ModelAdmin):
     list_display = ['nom', 'responsable']
-    search_fields = ['nom']
+    search_fields = ['nom', 'responsable']
+    inlines = [EmployeInline]
 
 
 @admin.register(Contrat)
 class ContratAdmin(admin.ModelAdmin):
-    list_display = ['employe', 'type', 'date_debut', 'date_fin', 'salaire']
-    list_filter = ['type']
-    search_fields = ['employe__nom', 'employe__prenom', 'employe__matricule']
+    list_display = ['reference', 'emploi', 'type_contrat', 'date_debut', 'date_fin']
+    list_filter = ['type_contrat']
+    search_fields = ['reference', 'emploi__nom', 'emploi__prenom', 'emploi__matricule']

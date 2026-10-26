@@ -2,80 +2,78 @@
 {% block titre %}Employés{% endblock %}
 
 {% block contenu %}
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+<header class="page-header">
   <div>
-    <h1 class="h3 mb-0">Employés</h1>
-    <p class="text-body-secondary mb-0">Enseignants, personnel administratif, technique et de services</p>
+    <h1>Employés</h1>
+    <p class="sous-titre">Personnel enseignant, administratif, technique et de services</p>
   </div>
-  <a href="{% url 'frontend:ajouter_employe' %}" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Ajouter un employé</a>
-</div>
+  <a href="{% url 'frontend:ajouter_employe' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nouvel employé</a>
+</header>
 
-<!-- Chiffres clés -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-lg-3">
-    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
-      <i class="bi bi-people text-primary"></i>
-      <div><div class="h4 mb-0" id="stat-employes">–</div><div class="small text-body-secondary">Employés</div></div>
-    </div></div>
+<section class="surface kpis mb-4" aria-label="Chiffres clés">
+  <div class="kpi">
+    <div class="kpi-libelle">Effectif</div>
+    <div class="kpi-valeur num" id="stat-employes">–</div>
+    <div class="kpi-detail" id="stat-departements">&nbsp;</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
-      <i class="bi bi-diagram-3 text-secondary"></i>
-      <div><div class="h4 mb-0" id="stat-departements">–</div><div class="small text-body-secondary">Départements</div></div>
-    </div></div>
+  <div class="kpi">
+    <div class="kpi-libelle">CDI</div>
+    <div class="kpi-valeur num" id="stat-cdi">–</div>
+    <div class="kpi-detail">Contrats à durée indéterminée</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
-      <i class="bi bi-file-earmark-check text-success"></i>
-      <div><div class="h4 mb-0" id="stat-cdi">–</div><div class="small text-body-secondary">Contrats CDI</div></div>
-    </div></div>
+  <div class="kpi">
+    <div class="kpi-libelle">CDD et prestataires</div>
+    <div class="kpi-valeur num" id="stat-autres">–</div>
+    <div class="kpi-detail">Contrats à durée déterminée</div>
   </div>
-  <div class="col-6 col-lg-3">
-    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
-      <i class="bi bi-hourglass-split text-warning"></i>
-      <div><div class="h4 mb-0" id="stat-autres">–</div><div class="small text-body-secondary">CDD et prestataires</div></div>
-    </div></div>
+  <div class="kpi" id="kpi-echeances">
+    <div class="kpi-libelle">Fins de contrat proches</div>
+    <div class="kpi-valeur num" id="stat-echeances">–</div>
+    <div class="kpi-detail" id="stat-seuil">&nbsp;</div>
   </div>
-</div>
+</section>
 
-<!-- Filtres + liste -->
-<div class="card border-0 shadow-sm">
-  <div class="card-header bg-body py-3">
-    <div class="row g-2">
-      <div class="col-md-5">
-        <label class="visually-hidden" for="filtre-departement">Département</label>
-        <select id="filtre-departement" class="form-select">
-          <option value="">Tous les départements</option>
-        </select>
-      </div>
-      <div class="col-md-7">
-        <label class="visually-hidden" for="recherche">Rechercher</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input id="recherche" type="search" class="form-control" placeholder="Nom, prénom, matricule ou poste">
-        </div>
-      </div>
+<section class="surface">
+  <div class="toolbar">
+    <div class="recherche">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <label class="visually-hidden" for="recherche">Rechercher un employé</label>
+      <input id="recherche" type="search" class="form-control" placeholder="Rechercher par nom, matricule ou poste" autocomplete="off">
     </div>
+    <label class="visually-hidden" for="filtre-departement">Filtrer par département</label>
+    <select id="filtre-departement" class="form-select">
+      <option value="">Tous les départements</option>
+    </select>
   </div>
+
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead class="table-light">
+    <table class="table table-rh">
+      <thead>
         <tr>
-          <th>Employé</th>
-          <th>Matricule</th>
-          <th>Département</th>
-          <th>Poste</th>
-          <th>Contrat</th>
-          <th class="text-end">Actions</th>
+          <th scope="col">Employé</th>
+          <th scope="col" class="d-none d-lg-table-cell">Matricule</th>
+          <th scope="col" class="d-none d-md-table-cell">Département</th>
+          <th scope="col" class="d-none d-md-table-cell">Poste</th>
+          <th scope="col">Contrat</th>
+          <th scope="col"><span class="visually-hidden">Actions</span></th>
         </tr>
       </thead>
       <tbody id="lignes-employes">
-        <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></td></tr>
+        {% for _ in '12345' %}
+        <tr>
+          <td><div class="d-flex align-items-center gap-2"><span class="avatar avatar-4"></span><div class="squelette" style="width: 140px"></div></div></td>
+          <td class="d-none d-lg-table-cell"><div class="squelette" style="width: 60px"></div></td>
+          <td class="d-none d-md-table-cell"><div class="squelette" style="width: 90px"></div></td>
+          <td class="d-none d-md-table-cell"><div class="squelette" style="width: 120px"></div></td>
+          <td><div class="squelette" style="width: 50px"></div></td>
+          <td></td>
+        </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="card-footer bg-body small text-body-secondary" id="compteur"></div>
-</div>
+  <div class="px-3 py-2 border-top small text-muted-rh num" id="compteur">&nbsp;</div>
+</section>
 {% endblock %}
 
 {% block scripts %}
@@ -89,9 +87,12 @@
   async function chargerStatistiques() {
     const stats = await RH.api('/api/statistiques/');
     document.getElementById('stat-employes').textContent = stats.employes;
-    document.getElementById('stat-departements').textContent = stats.departements;
+    document.getElementById('stat-departements').textContent = `Répartis dans ${RH.pluriel(stats.departements, 'département')}`;
     document.getElementById('stat-cdi').textContent = stats.cdi;
     document.getElementById('stat-autres').textContent = stats.cdd + stats.prestataires;
+    document.getElementById('stat-echeances').textContent = stats.echeances;
+    document.getElementById('stat-seuil').textContent = `Dans les ${stats.seuil_echeance} prochains jours`;
+    document.getElementById('kpi-echeances').classList.toggle('alerte', stats.echeances > 0);
   }
 
   async function chargerDepartements() {
@@ -109,40 +110,45 @@
     history.replaceState(null, '', filtres.toString() ? `?${filtres}` : location.pathname);
 
     try {
-      const employes = await RH.api(`/api/employes/?${filtres}`);
-      afficherEmployes(employes);
+      afficherEmployes(await RH.api(`/api/employes/?${filtres}`), filtres.toString() !== '');
     } catch (erreur) {
       RH.erreurServeur(erreur);
     }
   }
 
-  function afficherEmployes(employes) {
-    document.getElementById('compteur').textContent =
-      `${employes.length} employé${employes.length > 1 ? 's' : ''} affiché${employes.length > 1 ? 's' : ''}`;
+  function afficherEmployes(employes, filtre) {
+    document.getElementById('compteur').textContent = RH.pluriel(employes.length, 'employé');
 
     if (!employes.length) {
-      lignes.innerHTML = `<tr><td colspan="6" class="py-4"><div class="alert alert-info mb-0">
-        <i class="bi bi-info-circle me-2"></i>Aucun employé ne correspond à ces critères.</div></td></tr>`;
+      lignes.innerHTML = `<tr><td colspan="6"><div class="etat-vide">
+        <i class="bi bi-${filtre ? 'search' : 'people'}"></i>
+        ${filtre ? 'Aucun employé ne correspond à cette recherche.' : 'Aucun employé enregistré pour le moment.'}
+        </div></td></tr>`;
       return;
     }
 
     lignes.innerHTML = employes.map((e) => `
-      <tr data-id="${e.id}">
+      <tr class="cliquable" data-id="${e.id}">
         <td>
           <div class="d-flex align-items-center gap-2">
-            <span class="avatar bg-primary-subtle text-primary">${RH.echapper(RH.initiales(e))}</span>
-            <div><div class="fw-semibold">${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}</div>
-              <div class="small text-body-secondary">${RH.echapper(e.email)}</div></div>
+            ${RH.avatar(e)}
+            <div class="lh-sm">
+              <a href="/employes/${e.id}/" class="fw-medium text-reset text-decoration-none">${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}</a>
+              <div class="small text-muted-rh d-none d-md-block">${RH.echapper(e.email)}</div>
+              <div class="small text-muted-rh d-md-none">${RH.echapper(e.poste)}</div>
+            </div>
           </div>
         </td>
-        <td><code>${RH.echapper(e.matricule)}</code></td>
-        <td>${e.departement_nom ? `<span class="badge rounded-pill text-bg-secondary">${RH.echapper(e.departement_nom)}</span>` : '<span class="text-body-secondary">—</span>'}</td>
-        <td>${RH.echapper(e.poste)}</td>
-        <td>${RH.badgeContrat(e.contrat_actuel)}</td>
-        <td class="text-end text-nowrap">
-          <a class="btn btn-sm btn-outline-primary" href="/employes/${e.id}/modifier/" title="Modifier"><i class="bi bi-pencil"></i></a>
-          <button class="btn btn-sm btn-outline-danger" data-supprimer="${e.id}"
-                  data-nom="${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}" title="Supprimer"><i class="bi bi-trash"></i></button>
+        <td class="d-none d-lg-table-cell"><span class="mono text-muted-rh">${RH.echapper(e.matricule)}</span></td>
+        <td class="d-none d-md-table-cell">${e.departement_nom ? `<span class="departement">${RH.echapper(e.departement_nom)}</span>` : '<span class="text-muted-rh">—</span>'}</td>
+        <td class="d-none d-md-table-cell">${RH.echapper(e.poste)}</td>
+        <td>${RH.pastilleContrat(e.contrat_actuel)}${RH.echeance(e.contrat_actuel)}</td>
+        <td class="text-end">
+          <div class="actions d-inline-flex gap-1">
+            <a class="btn btn-icon" href="/employes/${e.id}/modifier/" aria-label="Modifier ${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}"><i class="bi bi-pencil"></i></a>
+            <button class="btn btn-icon danger" data-supprimer="${e.id}" data-nom="${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}"
+                    aria-label="Supprimer ${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}"><i class="bi bi-trash"></i></button>
+          </div>
         </td>
       </tr>`).join('');
   }
@@ -167,7 +173,7 @@
   let minuterie;
   champRecherche.addEventListener('input', () => {
     clearTimeout(minuterie);
-    minuterie = setTimeout(chargerEmployes, 300);
+    minuterie = setTimeout(chargerEmployes, 250);
   });
   filtreDepartement.addEventListener('change', chargerEmployes);
 

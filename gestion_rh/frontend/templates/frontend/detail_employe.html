@@ -10,7 +10,7 @@
 </nav>
 
 <div id="fiche">
-  <div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></div>
+  <div class="surface surface-body"><div class="squelette mb-3" style="width: 220px"></div><div class="squelette" style="width: 140px"></div></div>
 </div>
 {% endblock %}
 
@@ -18,67 +18,87 @@
 <script>
   const employeId = {{ employe_id }};
 
-  function ligneInfo(icone, libelle, valeur) {
-    return `<li class="list-group-item d-flex gap-3">
-      <i class="bi bi-${icone} text-primary"></i>
-      <div><div class="small text-body-secondary">${libelle}</div><div>${valeur}</div></div>
+  function ligneContrat(c, estActuel) {
+    let progression = '';
+    if (c.date_fin) {
+      const debut = new Date(`${c.date_debut}T00:00:00`), fin = new Date(`${c.date_fin}T00:00:00`);
+      const pourcentage = Math.min(100, Math.max(0, ((Date.now() - debut) / (fin - debut)) * 100));
+      const proche = RH.joursRestants(c.date_fin) <= RH.SEUIL_ECHEANCE;
+      progression = `<div class="progression ${proche ? 'proche' : ''}" role="progressbar" aria-label="Avancement du contrat"
+        aria-valuenow="${Math.round(pourcentage)}" aria-valuemin="0" aria-valuemax="100"><span style="width: ${pourcentage}%"></span></div>`;
+    }
+    return `<li class="${estActuel ? 'en-cours' : ''}">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-2">
+          ${RH.pastilleContrat(c)}
+          ${estActuel ? '<span class="small fw-medium" style="color: var(--rh-primary)">En cours</span>' : ''}
+        </div>
+        <span class="mono text-muted-rh">${RH.echapper(c.reference)}</span>
+      </div>
+      <div class="small text-muted-rh mt-1 num">
+        Du ${RH.date(c.date_debut)} ${c.date_fin ? `au ${RH.date(c.date_fin)}` : '· durée indéterminée'}
+      </div>
+      ${RH.echeance(c)}
+      ${progression}
     </li>`;
   }
 
   function afficherFiche(e) {
-    document.title = `${e.prenom} ${e.nom} · ISEP-AT`;
-    document.getElementById('fil-nom').textContent = `${e.prenom} ${e.nom}`;
-
-    const contrats = e.contrats.length
-      ? `<div class="table-responsive"><table class="table align-middle mb-0">
-          <thead class="table-light"><tr><th>Type</th><th>Début</th><th>Fin</th><th class="text-end">Salaire</th></tr></thead>
-          <tbody>${e.contrats.map((c) => `<tr>
-            <td>${RH.badgeContrat(c)}</td>
-            <td>${RH.date(c.date_debut)}</td>
-            <td>${c.date_fin ? RH.date(c.date_fin) : '<span class="text-body-secondary">Indéterminée</span>'}</td>
-            <td class="text-end">${RH.argent(c.salaire)}</td>
-          </tr>`).join('')}</tbody></table></div>`
-      : '<div class="alert alert-warning m-3 mb-3"><i class="bi bi-exclamation-circle me-2"></i>Aucun contrat enregistré.</div>';
+    const nomComplet = `${e.prenom} ${e.nom}`;
+    document.title = `${nomComplet} · ISEP-AT`;
+    document.getElementById('fil-nom').textContent = nomComplet;
+    const actuel = e.contrat_actuel;
 
     document.getElementById('fiche').innerHTML = `
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <div class="card border-0 shadow-sm">
-            <div class="card-body text-center py-4">
-              <span class="avatar avatar-lg bg-primary text-white mb-3">${RH.echapper(RH.initiales(e))}</span>
-              <h1 class="h4 mb-1">${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}</h1>
-              <p class="text-body-secondary mb-2">${RH.echapper(e.poste)}</p>
-              <div class="d-flex justify-content-center gap-2">
-                ${e.departement_nom ? `<span class="badge rounded-pill text-bg-secondary">${RH.echapper(e.departement_nom)}</span>` : ''}
-                ${RH.badgeContrat(e.contrat_actuel)}
-              </div>
-            </div>
-            <ul class="list-group list-group-flush">
-              ${ligneInfo('upc', 'Matricule', `<code>${RH.echapper(e.matricule)}</code>`)}
-              ${ligneInfo('envelope', 'Email', `<a href="mailto:${RH.echapper(e.email)}">${RH.echapper(e.email)}</a>`)}
-              ${ligneInfo('telephone', 'Téléphone', RH.echapper(e.telephone))}
-              ${ligneInfo('calendar-event', "Date d'embauche", RH.date(e.date_embauche))}
-            </ul>
-            <div class="card-body d-flex gap-2">
-              <a href="/employes/${e.id}/modifier/" class="btn btn-primary flex-fill"><i class="bi bi-pencil me-1"></i>Modifier</a>
-              <button id="bouton-supprimer" class="btn btn-outline-danger flex-fill"><i class="bi bi-trash me-1"></i>Supprimer</button>
-            </div>
+      <header class="page-header">
+        <div class="identite">
+          ${RH.avatar(e, 'avatar-lg')}
+          <div>
+            <h1>${RH.echapper(nomComplet)}</h1>
+            <p class="sous-titre mb-0">${RH.echapper(e.poste)}${e.departement_nom ? ` · ${RH.echapper(e.departement_nom)}` : ''}</p>
           </div>
         </div>
-        <div class="col-lg-8">
-          <div class="card border-0 shadow-sm">
-            <div class="card-header bg-body d-flex justify-content-between align-items-center py-3">
-              <h2 class="h5 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrats</h2>
-              <span class="badge text-bg-primary rounded-pill">${e.contrats.length}</span>
+        <div class="d-flex gap-2">
+          <button id="bouton-supprimer" class="btn btn-outline-danger"><i class="bi bi-trash me-1"></i>Supprimer</button>
+          <a href="/employes/${e.id}/modifier/" class="btn btn-primary"><i class="bi bi-pencil me-1"></i>Modifier</a>
+        </div>
+      </header>
+
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <section class="surface">
+            <div class="surface-header"><h2>Informations</h2></div>
+            <div class="surface-body">
+              <dl class="infos">
+                <div><dt>Matricule</dt><dd class="mono">${RH.echapper(e.matricule)}</dd></div>
+                <div><dt>Date d'embauche</dt><dd class="num">${RH.date(e.date_embauche)}</dd></div>
+                <div><dt>Email</dt><dd><a href="mailto:${RH.echapper(e.email)}">${RH.echapper(e.email)}</a></dd></div>
+                <div><dt>Téléphone</dt><dd class="num">${RH.telephone(e.telephone)}</dd></div>
+                <div><dt>Département</dt><dd>${e.departement_nom ? `<a href="/?departement=${e.departement}">${RH.echapper(e.departement_nom)}</a>` : '—'}</dd></div>
+                <div><dt>Poste</dt><dd>${RH.echapper(e.poste)}</dd></div>
+              </dl>
             </div>
-            ${contrats}
-          </div>
+          </section>
+        </div>
+        <div class="col-lg-7">
+          <section class="surface">
+            <div class="surface-header">
+              <h2>Contrats</h2>
+              <span class="small text-muted-rh">${RH.pluriel(e.contrats.length, 'contrat')}</span>
+            </div>
+            <div class="surface-body">
+              ${e.contrats.length
+                ? `<ul class="chronologie">${e.contrats.map((c) => ligneContrat(c, actuel && c.id === actuel.id)).join('')}</ul>`
+                : `<div class="etat-vide py-4"><i class="bi bi-file-earmark"></i>Aucun contrat enregistré.
+                    <div class="mt-2"><a href="/employes/${e.id}/modifier/">Ajouter un contrat</a></div></div>`}
+            </div>
+          </section>
         </div>
       </div>`;
 
     document.getElementById('bouton-supprimer').addEventListener('click', async () => {
-      if (await RH.supprimerEmploye(e.id, `${e.prenom} ${e.nom}`)) {
-        RH.messageApresRedirection(`${e.prenom} ${e.nom} a été supprimé(e).`);
+      if (await RH.supprimerEmploye(e.id, nomComplet)) {
+        RH.messageApresRedirection(`${nomComplet} a été supprimé(e).`);
         location.href = '{% url "frontend:liste_employes" %}';
       }
     });
@@ -87,8 +107,10 @@
   RH.api(`/api/employes/${employeId}/`)
     .then(afficherFiche)
     .catch((erreur) => {
-      document.getElementById('fiche').innerHTML = '';
-      RH.erreurServeur(erreur);
+      document.getElementById('fiche').innerHTML = `<div class="surface"><div class="etat-vide">
+        <i class="bi bi-person-x"></i>Cet employé est introuvable.
+        <div class="mt-2"><a href="{% url 'frontend:liste_employes' %}">Retour à la liste</a></div></div></div>`;
+      if (erreur.status !== 404) RH.erreurServeur(erreur);
     });
 </script>
 {% endblock %}
