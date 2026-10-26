@@ -1,0 +1,178 @@
+{% extends 'frontend/base.html' %}
+{% block titre %}Employés{% endblock %}
+
+{% block contenu %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-0">Employés</h1>
+    <p class="text-body-secondary mb-0">Enseignants, personnel administratif, technique et de services</p>
+  </div>
+  <a href="{% url 'frontend:ajouter_employe' %}" class="btn btn-primary"><i class="bi bi-person-plus me-1"></i>Ajouter un employé</a>
+</div>
+
+<!-- Chiffres clés -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
+      <i class="bi bi-people text-primary"></i>
+      <div><div class="h4 mb-0" id="stat-employes">–</div><div class="small text-body-secondary">Employés</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
+      <i class="bi bi-diagram-3 text-secondary"></i>
+      <div><div class="h4 mb-0" id="stat-departements">–</div><div class="small text-body-secondary">Départements</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
+      <i class="bi bi-file-earmark-check text-success"></i>
+      <div><div class="h4 mb-0" id="stat-cdi">–</div><div class="small text-body-secondary">Contrats CDI</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card carte-stat border-0 shadow-sm h-100"><div class="card-body d-flex align-items-center gap-3">
+      <i class="bi bi-hourglass-split text-warning"></i>
+      <div><div class="h4 mb-0" id="stat-autres">–</div><div class="small text-body-secondary">CDD et prestataires</div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- Filtres + liste -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-body py-3">
+    <div class="row g-2">
+      <div class="col-md-5">
+        <label class="visually-hidden" for="filtre-departement">Département</label>
+        <select id="filtre-departement" class="form-select">
+          <option value="">Tous les départements</option>
+        </select>
+      </div>
+      <div class="col-md-7">
+        <label class="visually-hidden" for="recherche">Rechercher</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input id="recherche" type="search" class="form-control" placeholder="Nom, prénom, matricule ou poste">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Employé</th>
+          <th>Matricule</th>
+          <th>Département</th>
+          <th>Poste</th>
+          <th>Contrat</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="lignes-employes">
+        <tr><td colspan="6" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-body small text-body-secondary" id="compteur"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const filtreDepartement = document.getElementById('filtre-departement');
+  const champRecherche = document.getElementById('recherche');
+  const lignes = document.getElementById('lignes-employes');
+  const parametres = new URLSearchParams(location.search);
+  champRecherche.value = parametres.get('search') || '';
+
+  async function chargerStatistiques() {
+    const stats = await RH.api('/api/statistiques/');
+    document.getElementById('stat-employes').textContent = stats.employes;
+    document.getElementById('stat-departements').textContent = stats.departements;
+    document.getElementById('stat-cdi').textContent = stats.cdi;
+    document.getElementById('stat-autres').textContent = stats.cdd + stats.prestataires;
+  }
+
+  async function chargerDepartements() {
+    const departements = await RH.api('/api/departements/');
+    for (const departement of departements) {
+      filtreDepartement.add(new Option(`${departement.nom} (${departement.nb_employes})`, departement.id));
+    }
+    filtreDepartement.value = parametres.get('departement') || '';
+  }
+
+  async function chargerEmployes() {
+    const filtres = new URLSearchParams();
+    if (filtreDepartement.value) filtres.set('departement', filtreDepartement.value);
+    if (champRecherche.value.trim()) filtres.set('search', champRecherche.value.trim());
+    history.replaceState(null, '', filtres.toString() ? `?${filtres}` : location.pathname);
+
+    try {
+      const employes = await RH.api(`/api/employes/?${filtres}`);
+      afficherEmployes(employes);
+    } catch (erreur) {
+      RH.erreurServeur(erreur);
+    }
+  }
+
+  function afficherEmployes(employes) {
+    document.getElementById('compteur').textContent =
+      `${employes.length} employé${employes.length > 1 ? 's' : ''} affiché${employes.length > 1 ? 's' : ''}`;
+
+    if (!employes.length) {
+      lignes.innerHTML = `<tr><td colspan="6" class="py-4"><div class="alert alert-info mb-0">
+        <i class="bi bi-info-circle me-2"></i>Aucun employé ne correspond à ces critères.</div></td></tr>`;
+      return;
+    }
+
+    lignes.innerHTML = employes.map((e) => `
+      <tr data-id="${e.id}">
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <span class="avatar bg-primary-subtle text-primary">${RH.echapper(RH.initiales(e))}</span>
+            <div><div class="fw-semibold">${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}</div>
+              <div class="small text-body-secondary">${RH.echapper(e.email)}</div></div>
+          </div>
+        </td>
+        <td><code>${RH.echapper(e.matricule)}</code></td>
+        <td>${e.departement_nom ? `<span class="badge rounded-pill text-bg-secondary">${RH.echapper(e.departement_nom)}</span>` : '<span class="text-body-secondary">—</span>'}</td>
+        <td>${RH.echapper(e.poste)}</td>
+        <td>${RH.badgeContrat(e.contrat_actuel)}</td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-primary" href="/employes/${e.id}/modifier/" title="Modifier"><i class="bi bi-pencil"></i></a>
+          <button class="btn btn-sm btn-outline-danger" data-supprimer="${e.id}"
+                  data-nom="${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}" title="Supprimer"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // Clic sur une ligne : fiche de l'employé ; clic sur la corbeille : suppression
+  lignes.addEventListener('click', async (evenement) => {
+    const boutonSupprimer = evenement.target.closest('[data-supprimer]');
+    if (boutonSupprimer) {
+      const { supprimer: id, nom } = boutonSupprimer.dataset;
+      if (await RH.supprimerEmploye(id, nom)) {
+        RH.alerte(`${nom} a été supprimé(e).`);
+        chargerEmployes();
+        chargerStatistiques();
+      }
+      return;
+    }
+    if (evenement.target.closest('a, button')) return;
+    const ligne = evenement.target.closest('tr[data-id]');
+    if (ligne) location.href = `/employes/${ligne.dataset.id}/`;
+  });
+
+  let minuterie;
+  champRecherche.addEventListener('input', () => {
+    clearTimeout(minuterie);
+    minuterie = setTimeout(chargerEmployes, 300);
+  });
+  filtreDepartement.addEventListener('change', chargerEmployes);
+
+  Promise.all([chargerStatistiques(), chargerDepartements()])
+    .then(chargerEmployes)
+    .catch(RH.erreurServeur);
+</script>
+{% endblock %}

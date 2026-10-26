@@ -1,0 +1,48 @@
+{% extends 'frontend/base.html' %}
+{% block titre %}Départements{% endblock %}
+
+{% block contenu %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-0">Départements</h1>
+    <p class="text-body-secondary mb-0">Cliquez sur un département pour voir ses employés</p>
+  </div>
+  <a href="{% url 'admin:rh_departement_changelist' %}" class="btn btn-outline-primary"><i class="bi bi-gear me-1"></i>Gérer dans l'administration</a>
+</div>
+
+<div class="row g-3" id="departements">
+  <div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  RH.api('/api/departements/')
+    .then((departements) => {
+      const zone = document.getElementById('departements');
+      if (!departements.length) {
+        zone.innerHTML = `<div class="col-12"><div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>
+          Aucun département. Ajoutez-en depuis l'administration.</div></div>`;
+        return;
+      }
+      zone.innerHTML = departements.map((d) => `
+        <div class="col-md-6 col-lg-4">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h2 class="h5 mb-0">${RH.echapper(d.nom)}</h2>
+                <span class="badge rounded-pill text-bg-primary">${d.nb_employes} employé${d.nb_employes > 1 ? 's' : ''}</span>
+              </div>
+              <p class="text-body-secondary small">${RH.echapper(d.description) || 'Pas de description.'}</p>
+              <p class="mb-0 small"><i class="bi bi-person-badge me-1"></i>Responsable :
+                ${d.responsable_nom ? `<strong>${RH.echapper(d.responsable_nom)}</strong>` : '<span class="text-body-secondary">non défini</span>'}</p>
+            </div>
+            <div class="card-footer bg-body border-0 pt-0 pb-3">
+              <a href="/?departement=${d.id}" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-people me-1"></i>Voir les employés</a>
+            </div>
+          </div>
+        </div>`).join('');
+    })
+    .catch(RH.erreurServeur);
+</script>
+{% endblock %}

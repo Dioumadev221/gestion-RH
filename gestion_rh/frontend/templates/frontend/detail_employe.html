@@ -1,0 +1,94 @@
+{% extends 'frontend/base.html' %}
+{% block titre %}Fiche employé{% endblock %}
+
+{% block contenu %}
+<nav aria-label="Fil d'Ariane">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'frontend:liste_employes' %}">Employés</a></li>
+    <li class="breadcrumb-item active" aria-current="page" id="fil-nom">Fiche</li>
+  </ol>
+</nav>
+
+<div id="fiche">
+  <div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Chargement…</span></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const employeId = {{ employe_id }};
+
+  function ligneInfo(icone, libelle, valeur) {
+    return `<li class="list-group-item d-flex gap-3">
+      <i class="bi bi-${icone} text-primary"></i>
+      <div><div class="small text-body-secondary">${libelle}</div><div>${valeur}</div></div>
+    </li>`;
+  }
+
+  function afficherFiche(e) {
+    document.title = `${e.prenom} ${e.nom} · ISEP-AT`;
+    document.getElementById('fil-nom').textContent = `${e.prenom} ${e.nom}`;
+
+    const contrats = e.contrats.length
+      ? `<div class="table-responsive"><table class="table align-middle mb-0">
+          <thead class="table-light"><tr><th>Type</th><th>Début</th><th>Fin</th><th class="text-end">Salaire</th></tr></thead>
+          <tbody>${e.contrats.map((c) => `<tr>
+            <td>${RH.badgeContrat(c)}</td>
+            <td>${RH.date(c.date_debut)}</td>
+            <td>${c.date_fin ? RH.date(c.date_fin) : '<span class="text-body-secondary">Indéterminée</span>'}</td>
+            <td class="text-end">${RH.argent(c.salaire)}</td>
+          </tr>`).join('')}</tbody></table></div>`
+      : '<div class="alert alert-warning m-3 mb-3"><i class="bi bi-exclamation-circle me-2"></i>Aucun contrat enregistré.</div>';
+
+    document.getElementById('fiche').innerHTML = `
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+              <span class="avatar avatar-lg bg-primary text-white mb-3">${RH.echapper(RH.initiales(e))}</span>
+              <h1 class="h4 mb-1">${RH.echapper(e.prenom)} ${RH.echapper(e.nom)}</h1>
+              <p class="text-body-secondary mb-2">${RH.echapper(e.poste)}</p>
+              <div class="d-flex justify-content-center gap-2">
+                ${e.departement_nom ? `<span class="badge rounded-pill text-bg-secondary">${RH.echapper(e.departement_nom)}</span>` : ''}
+                ${RH.badgeContrat(e.contrat_actuel)}
+              </div>
+            </div>
+            <ul class="list-group list-group-flush">
+              ${ligneInfo('upc', 'Matricule', `<code>${RH.echapper(e.matricule)}</code>`)}
+              ${ligneInfo('envelope', 'Email', `<a href="mailto:${RH.echapper(e.email)}">${RH.echapper(e.email)}</a>`)}
+              ${ligneInfo('telephone', 'Téléphone', RH.echapper(e.telephone))}
+              ${ligneInfo('calendar-event', "Date d'embauche", RH.date(e.date_embauche))}
+            </ul>
+            <div class="card-body d-flex gap-2">
+              <a href="/employes/${e.id}/modifier/" class="btn btn-primary flex-fill"><i class="bi bi-pencil me-1"></i>Modifier</a>
+              <button id="bouton-supprimer" class="btn btn-outline-danger flex-fill"><i class="bi bi-trash me-1"></i>Supprimer</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body d-flex justify-content-between align-items-center py-3">
+              <h2 class="h5 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrats</h2>
+              <span class="badge text-bg-primary rounded-pill">${e.contrats.length}</span>
+            </div>
+            ${contrats}
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('bouton-supprimer').addEventListener('click', async () => {
+      if (await RH.supprimerEmploye(e.id, `${e.prenom} ${e.nom}`)) {
+        RH.messageApresRedirection(`${e.prenom} ${e.nom} a été supprimé(e).`);
+        location.href = '{% url "frontend:liste_employes" %}';
+      }
+    });
+  }
+
+  RH.api(`/api/employes/${employeId}/`)
+    .then(afficherFiche)
+    .catch((erreur) => {
+      document.getElementById('fiche').innerHTML = '';
+      RH.erreurServeur(erreur);
+    });
+</script>
+{% endblock %}

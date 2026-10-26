@@ -24,10 +24,12 @@ class Departement(models.Model):
 
 
 class Employe(models.Model):
-    matricule = models.CharField(max_length=20, unique=True)
+    matricule = models.CharField(
+        max_length=20, unique=True, error_messages={'unique': 'Ce matricule est déjà attribué à un employé.'}
+    )
     nom = models.CharField(max_length=100)
     prenom = models.CharField('prénom', max_length=100)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(unique=True, error_messages={'unique': 'Cet email est déjà utilisé par un employé.'})
     telephone = models.CharField(
         'téléphone',
         max_length=20,
